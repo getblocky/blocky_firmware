@@ -1,18 +1,59 @@
-import machine, json, ujson, utime, network, time, binascii, gcimport sysfrom machine import Pin, Timerfrom simple import MQTTClientBROKER = 'staging.broker.getblocky.com'CHIP_ID = binascii.hexlify(machine.unique_id()).decode('ascii')class Blocky:  def __init__(self, config):    self.config = config    self.state = 0
+import machine, json, ujson, utime, network, time, binascii, gc
+import sys
+from machine import Pin, Timer
+from simple import MQTTClient
+
+BROKER = 'staging.broker.getblocky.com'
+CHIP_ID = binascii.hexlify(machine.unique_id()).decode('ascii')
+
+class Blocky:
+  def __init__(self, config):
+    self.config = config
+    self.state = 0
     self.has_msg = False
     self.topic = ''
-    self.msg = ''    self.mqtt = MQTTClient(CHIP_ID, BROKER, 0, CHIP_ID, self.config['auth_key'], 1883)
-    self.message_handlers = {}        def on_message(self, topic, msg):
+    self.msg = ''
+    self.mqtt = MQTTClient(CHIP_ID, BROKER, 0, CHIP_ID, self.config['auth_key'], 1883)
+    self.message_handlers = {}
+      
+  def on_message(self, topic, msg):
     print('On new message topic: ' + topic.decode())
     self.has_msg = True
     self.topic = topic.decode()
-    self.msg = msg.decode()          def connect(self):    print('Connecting to broker')    self.mqtt.set_callback(self.on_message)    try:      self.mqtt.connect()    except Exception as error:      print('Failed to connect to broker')      return False        register_data = {'event': 'register',       'chipId': CHIP_ID,       'firmwareVersion': '1.0',      'name': self.config.get('name', 'Blocky_' + CHIP_ID),      'type': 'esp32'    }        self.mqtt.publish(topic=self.config['auth_key'] + '/sys/', msg=ujson.dumps(register_data))    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/ota/#')    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/run/#')    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/rename/#')    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/reboot/#')    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upload/#')    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upgrade/#')    self.state = 1    print('Connected to broker')    return True      def process(self):    if self.state != 1:      return
-    try:      self.mqtt.check_msg()
-      self.handle_msg()
+    self.msg = msg.decode()      
+  
+  def connect(self):
+    print('Connecting to broker')
+    self.mqtt.set_callback(self.on_message)
+    try:
+      self.mqtt.connect()
     except Exception as error:
-      print(type(error))
-      print(error.args)
-      print(error)  
+      print('Failed to connect to broker')
+      return False
+    
+    register_data = {'event': 'register', 
+      'chipId': CHIP_ID, 
+      'firmwareVersion': '1.0',
+      'name': self.config.get('name', 'Blocky_' + CHIP_ID),
+      'type': 'esp32'
+    }
+    
+    self.mqtt.publish(topic=self.config['auth_key'] + '/sys/', msg=ujson.dumps(register_data))
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/ota/#')
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/run/#')
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/rename/#')
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/reboot/#')
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upload/#')
+    self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upgrade/#')
+    self.state = 1
+    print('Connected to broker')
+    return True
+    
+  def process(self):
+    if self.state != 1:
+      return
+    self.mqtt.check_msg()
+    self.handle_msg()
       
     
   def handle_msg(self):
@@ -58,7 +99,7 @@ import machine, json, ujson, utime, network, time, binascii, gcimport sysfrom 
     self.mqtt.publish(topic=topic, msg=msg)
     
   def log(self, text):
-    if self.state != 1 or not text:
+    if self.state != 1 or text is None or text == '':
       return
     sysPrefix = self.config['auth_key'] + '/sys/' + CHIP_ID + '/log'
     self.mqtt.publish(topic=sysPrefix, msg=str(text))
@@ -69,4 +110,6 @@ import machine, json, ujson, utime, network, time, binascii, gcimport sysfrom 
     topic = self.config['auth_key'] + '/user/' + topic
     self.mqtt.subscribe(topic)
     self.message_handlers[topic] = cb
-      
+      
+
+
