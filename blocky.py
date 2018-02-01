@@ -1,5 +1,5 @@
-import machine, json, ujson, utime, network, time, binascii, gc
-import sys
+import machine, json, ujson, utime, network
+import time, binascii, gc, sys, re
 from machine import Pin, Timer
 from simple import MQTTClient
 
@@ -34,7 +34,7 @@ class Blocky:
     register_data = {'event': 'register', 
       'chipId': CHIP_ID, 
       'firmwareVersion': '1.0',
-      'name': self.config.get('name', 'Blocky_' + CHIP_ID),
+      'name': self.config.get('device_name', 'Blocky_' + CHIP_ID),
       'type': 'esp32'
     }
     
@@ -86,8 +86,11 @@ class Blocky:
       elif self.topic == sysPrefix + 'upgrade':
         print('Receive UPGRADE message')
     elif self.topic.startswith(userPrefix):
-      if self.message_handlers.get(self.topic):
-        self.message_handlers.get(self.topic)(self.topic, self.msg)
+      for t in self.message_handlers:
+        format_topic = t.replace('/+', '/[a-zA-Z0-9_]+')
+        format_topic = format_topic.replace('/#', '/*')
+        if re.match(format_topic, self.topic):
+          self.message_handlers.get(t)(self.topic, self.msg)
     self.topic = ''
     self.msg = ''
     self.has_msg = False
@@ -96,7 +99,7 @@ class Blocky:
     if self.state != 1 or not topic or not msg:
       return
     topic = self.config['auth_key'] + '/user/' + topic
-    self.mqtt.publish(topic=topic, msg=msg)
+    self.mqtt.publish(topic=topic, msg=str(msg))
     
   def log(self, text):
     if self.state != 1 or text is None or text == '':
@@ -111,5 +114,9 @@ class Blocky:
     self.mqtt.subscribe(topic)
     self.message_handlers[topic] = cb
       
+
+
+
+
 
 
