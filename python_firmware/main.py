@@ -44,10 +44,11 @@ def run_user_code():
 
 config_btn = Pin(CONFIG_PIN, Pin.IN)
 
+status_led = NeoPixel(Pin(LED_PIN, Pin.OUT), 1, timing = True)
+
 if config_btn.value(): 
   print('config button is pressed')
   # turn on config led
-  #status_led.value(1)
   status_led.fill((255, 0, 0))
   status_led.write()
   
@@ -88,7 +89,6 @@ if config_btn.value():
     import config_manager
 
 else: # config btn is not pressed
-  status_led = NeoPixel(Pin(LED_PIN, Pin.OUT), 1)
   status_led_on = 0
   status_led_blink_timer = Timer(-1)
   status_led_blink_timer.init(period=500, mode=Timer.PERIODIC, callback=blink_status_led)
@@ -108,6 +108,7 @@ else: # config btn is not pressed
     or not config.get('auth_key', False) \
     or not config.get('known_networks', False):
     print('Missing required info in config. Enter config mode')
+    status_led_blink_timer.deinit()
     import config_manager
   else:
     print('Finish loading config file')

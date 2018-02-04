@@ -3,7 +3,7 @@ import time, binascii, gc, sys, re
 from machine import Pin, Timer
 from simple import MQTTClient
 
-BROKER = 'staging.broker.getblocky.com'
+BROKER = 'broker.getblocky.com'
 CHIP_ID = binascii.hexlify(machine.unique_id()).decode('ascii')
 
 class Blocky:
