@@ -846,12 +846,19 @@ class ConfigManager:
       f.write(ujson.dumps(self.config))
       f.close()
     
+  def is_ascii(self, s):
+    return all(ord(c) < 128 for c in s)
+  
   def _httpHandlerScanNetworks(self, httpClient, httpResponse) :
     print('Receive request to scan networks')
     self.wlan_sta.active(True)
     networks = []
     for nw in self.wlan_sta.scan():
-      networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
+      if (self.is_ascii(nw[0].decode('ascii'))):
+        networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
+      else:
+        print('Unicode error found in WiFi SSID')
+        continue
     
     content = ujson.dumps(networks)
    
@@ -906,4 +913,6 @@ if configManager.start():
 
 else:
   print ("There is something wrong")
+
+
 
