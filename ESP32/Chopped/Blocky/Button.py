@@ -65,13 +65,3 @@ class Button:
 			print('btn-exec->' , err)
 			pass
 			
-"""
-b = Button('D3')
-async def c():
-	while True :
-		print(runtime())
-		await asyncio.sleep_ms(2000)
-b.event('hold' , 1 , c )
-loop = asyncio.get_event_loop()
-loop.run_forever()
-"""

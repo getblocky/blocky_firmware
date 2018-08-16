@@ -1,11 +1,11 @@
 import socket , struct , gc
 from Blocky.Timer import runtime
 from time import sleep_ms
-import Blocky.uasyncio as asyncio
 class MQTTException(Exception):
 		pass
 
 class MQTTClient:
+
 	def __init__(self, client_id, server, port=0, user=None, password=None, keepalive=0,ssl=False, ssl_params={}):
 		if port == 0:
 			port = 8883 if ssl else 1883
@@ -161,13 +161,12 @@ class MQTTClient:
 	def wait_msg(self):
 		res = self.sock.read(1)
 		self.sock.setblocking(False)
-		if res is None or len(res)==0:
+		if res is None:
 			return None
 		if res == b"\xd0":	# PINGRESP
 			sz = self.sock.read(1)[0]
 			assert sz == 0
 			return None
-		
 		op = res[0]
 		if op & 0xf0 != 0x30:
 			return op
@@ -181,9 +180,7 @@ class MQTTClient:
 			pid = pid[0] << 8 | pid[1]
 			sz -= 2
 		msg = self.sock.read(sz)
-		loop = asyncio.get_event_loop()
-		loop.call_soon(self.cb(topic,msg))
-		#self.cb(topic, msg)
+		self.cb(topic, msg)
 		if op & 6 == 2:
 			pkt = bytearray(b"\x40\x02\0\0")
 			struct.pack_into("!H", pkt, 2, pid)
@@ -192,12 +189,4 @@ class MQTTClient:
 			assert 0
 
 	# Checks whether a pending message from server is available.
-	# If not, returns immediately with None. Otherwise, does
-	# the same processing as wait_msg.
-	def check_msg(self):
-		self.sock.setblocking(False)
-		return self.wait_msg()
-
-
-
-
+	# If

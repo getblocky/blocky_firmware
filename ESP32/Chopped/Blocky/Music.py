@@ -8,8 +8,7 @@ class Music :
 	def __init__ ( self , port ):
 		pin = getPin(port)
 		if (pin[0]==None or pin[1] == None):
-			from machine import reset 
-			reset()
+			return
 		self.bus = UART(1 , 9600)
 		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = pin[0] , tx = pin[1] )
 	
@@ -141,8 +140,8 @@ class Music :
 			if ticks_diff(ticks_ms() , nowTime) > 200:
 				return None
 		buffer = self.bus.read(10)
-		print(buffer)
 		return buffer[5]*256 + buffer[6]
+
 
 
 

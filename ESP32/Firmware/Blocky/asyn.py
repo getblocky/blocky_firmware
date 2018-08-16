@@ -322,12 +322,7 @@ class Cancellable():
 
 def cancellable(f):
     def new_gen(*args, **kwargs):
-        print(args , kwargs)
-        if (len(args)==0 and len(kwargs) == 0):
-            task_id = None 
-            g = f()
-			
-        elif isinstance(args[0], TaskId):  # Not a bound method
+        if isinstance(args[0], TaskId):  # Not a bound method
             task_id = args[0]
             g = f(*args[1:], **kwargs)
         else:  # Task ID is args[1] if a bound method
@@ -471,4 +466,3 @@ class Gatherable():
 
     def __call__(self):
         return self.arguments
-

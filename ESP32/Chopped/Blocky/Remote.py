@@ -9,8 +9,7 @@ class Remote :
 	def __init__ (self,port):
 		self.p = getPin(port)
 		if self.p[0] == None or self.p[1] == None:
-			from Blocky.Network import network
-			network.log('Wrong pin for ' , self.p)
+			return
 			
 		self.pwm = PWM(Pin(self.p[1]),freq = 38000,duty=0)
 		self.pwm.duty(0)
@@ -28,6 +27,7 @@ class Remote :
 			freq = data['freq']
 			self.recv = Pin(self.p[0],Pin.OUT)
 			self.recv.value(1)
+			# Warning : there must be a current limit resistor at the TSSOP
 			# Feedback , light indicate the chip has received
 			# In this case , it is not , therefore , 1
 			try :
@@ -45,8 +45,9 @@ class Remote :
 			self.recv = Pin(self.p[0],Pin.IN)
 			#enable_irq()
 		except Exception as err:
+			from Blocky.Network import network
+			network.log('rm-send->' , err)
 			print('rm-send->' , err)
-			pass
 		finally:
 			f.close()
 			
@@ -89,5 +90,8 @@ class Remote :
 			sleep_us(30000)
 		self.recv = Pin(self.p[0],Pin.IN)
 		
-	
+	def event(**kwargs):
+		from Blocky.Network import network
+		network.log('Remote event not implemeted')
 		
+

@@ -6,13 +6,14 @@ import gc
 from time import sleep_ms
 from Blocky.Timer import *
 from ujson import dumps , loads
-#import uasyncio as asyncio
 import Blocky.uasyncio as asyncio
 from Blocky.asyn import cancellable , Cancellable
 BROKER = 'broker.getblocky.com'
 CHIP_ID = hexlify(unique_id()).decode('ascii')
 from machine import Timer , Pin
-from Blocky.Global import flag_UPCODE
+import Blocky.Global 
+from Blocky.Timer import runtime
+		
 class Network:
 	def __init__ (self):
 		self.state = 0
@@ -22,26 +23,54 @@ class Network:
 		self.message_handlers = {}
 		self.retry = 0
 		self.echo = []
+		self.config = {'known_networks':[] , 'device_name':'' , 'auth_key':''}
+		self.server = None
+		self.BootManager = None
 		from json import loads
-		self.config = loads(open('config.json','r').read())
+		try :
+			self.config = loads(open('config.json','r').read())
+		except Exception as err:
+			print('network->init' , err)
+			#from Blocky.BootMode import bootmode 
+			#await bootmode.Start()
+			self.config = loads(open('config.json','r').read())
+
 		self.mqtt = MQTTClient(CHIP_ID, BROKER, 0, CHIP_ID, self.config['auth_key'], 1883)
 		self.sysPrefix = self.config.get('auth_key') + '/sys/' + CHIP_ID + '/'
 		self.userPrefix = self.config.get('auth_key') + '/user/'
 		self.mqtt_connected = False
 		self.last_call = runtime()
-		Timer(-1).init(mode = Timer.PERIODIC , period = 3000 , callback = self.failsafe)
+		try :
+			#Timer(1).init(mode = Timer.PERIODIC , period = 10000 , callback = self.failsafe)
+		except :
+			pass
+			
 	def failsafe(self,source):
-		if runtime() - self.last_call > 3000 :
-			self.process()
-			self.last_call = runtime()
-	def connect(self):
+		if runtime() - self.last_call > 5000 :
+			print('Yppppppppppppppppppppppppppppppppppppppppppppp')
+			f = open('user_code.py','w')
+			f.close()
+			from Blocky.Indicator import indicator
+			for x in range(20):
+				indicator.rgb[0] = (255,0,0)
+				indicator.rgb.write()
+				sleep_ms(50)
+				indicator.rgb[0] = (0,0,0)
+				indicator.rgb.write()
+				sleep_ms(50)
+			from machine import reset
+			reset()
+		
+	#---------------------------------------------------------
+	
+	async def connect(self):
 		from network import WLAN , STA_IF
 		wlan_sta = WLAN(STA_IF)
 		wlan_sta.active(True)
 		wifi_list = []
 		indicator.animate('heartbeat' , (100,0,0))
 		print('Scanning wifi')
-		sleep_ms(50)
+		await asyncio.sleep_ms(50)
 		try :
 			for wifi in wlan_sta.scan(): #OSError Wifi Invalid Argument
 				print(wifi)
@@ -57,7 +86,7 @@ class Network:
 				if wlan_sta.isconnected():
 					break
 				print('.',end='')
-				sleep_ms(1000)
+				await asyncio.sleep_ms(1000)
 			if wlan_sta.isconnected():
 				print('Connected to ' , preference)
 				self.mqtt_connected = False
@@ -67,7 +96,7 @@ class Network:
 						print('Retry..')
 						self.mqtt.connect()
 						self.mqtt_connected = True
-						sleep_ms(2000)
+						await asyncio.sleep_ms(2000)
 						break
 					except Exception:
 						pass
@@ -92,9 +121,11 @@ class Network:
 		self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upload/#')
 		self.mqtt.subscribe(self.config['auth_key'] + '/sys/' + CHIP_ID + '/upgrade/#')
 		self.mqtt.publish(topic=self.config['auth_key'] + '/sys/', msg=dumps(register_data))
-    
+	
 		self.state = 1
 		print('Connected to broker')
+		import Blocky.Global
+		Blocky.Global.flag_ONLINE = True
 		indicator.animate()
 		for x in range(0,250,1):
 			indicator.rgb[0] = (0,x,x);indicator.rgb.write()
@@ -105,17 +136,22 @@ class Network:
 		return True 
 		
 	def process(self): # Feed function , run as much as possible
-		indicator.animate('heartbeat' , (100,0,0));self.last_call = runtime()
+		indicator.animate('heartbeat' , (255,0,0));self.last_call = runtime()
 		if self.state != 1:
 			return 
 		try :
 			self.mqtt.check_msg()
 		except Exception as err:
 			print('nw-mqtt-> ' , err)
+			import sys 
+			sys.print_exception(err)
+			#await self.connect()
 	# Process will trigger mqtt.wait_msg -> selb.cb -> self.handler
 	async def cancel (self):
 		await Cancellable.cancel_all()
-	def handler(self,topic,message):
+		print('Canceled')
+	async def handler(self,topic,message):
+		print('%',end='')
 		try :
 			indicator.animate('pulse' , (0,100,0))
 			print('handle',topic  , message)
@@ -132,10 +168,9 @@ class Network:
 				print('func' , function)
 				if function :
 					print('init')
-					loop = asyncio.get_event_loop()
 					try :
-						if not str(function(self.topic.split('/')[-1],self.message)).split("'")[1] in loop.tasks :
-							loop.create_task(Cancellable(function(self.topic.split('/')[-1],self.message))(self.topic.split('/')[-1],self.message))
+							#loop.create_task(Cancellable(function(self.topic.split('/')[-1],self.message))(self.topic.split('/')[-1],self.message))
+						await function(self.topic.split('/')[-1],self.message)
 					except Exception as err:
 						print('['+str(runtime())+']','nw-handler->' , err)
 						
@@ -151,16 +186,12 @@ class Network:
 					#global FLAG_UPCODE
 					#FLAG_UPCODE = True
 					print('Cancelling')
-					try :
-						loop = asyncio.get_event_loop()
-						loop.call_soon(self.cancel())
-					except :
-						pass 
+					await Cancellable.cancel_all()
+					
 					#loop.call_soon(cancel())
-					import Blocky.Global
 					Blocky.Global.flag_UPCODE = True 
 					
-					print('Canceled')
+					
 					
 					print('RUN')
 					self.mqtt.publish(topic=self.config['auth_key'] + '/sys/', msg=dumps(otaAckMsg))
@@ -193,7 +224,10 @@ class Network:
 			self.topic = ''
 			self.message = ''
 	
-	def send(self,topic,data,echo=False):
+	async def send(self,topic,data,echo=False,timout = 2):
+		while Blocky.Global.flag_ONLINE == False and runtime() < start + timeout *1000 :
+			await asyncio.sleep_ms(100)
+			
 		if self.state!=1 or not topic or not data:
 			return 
 		topic = self.config.get('auth_key') + '/user/' + topic
@@ -204,8 +238,11 @@ class Network:
 			self.mqtt.publish(topic = topic,msg = str(data))
 		except Exception as err:
 			print('nw-send->',err,topic,data)
-	def log(self,message):
-	
+	async def log(self,message,timeout = 2):
+		start = runtime()
+		while Blocky.Global.flag_ONLINE == False and runtime() < start + timeout *1000 :
+			await asyncio.sleep_ms(100)
+			
 		if self.state != 1 or not message:
 			return 
 		prefix = self.config.get('auth_key') + '/sys/' + CHIP_ID + '/log'
@@ -214,18 +251,23 @@ class Network:
 			self.mqtt.publish(topic=prefix,msg=str(message))
 		except Exception as err:
 			print('nw-log->',err,message)
-	def subscribe(self,topic,callback):
+	async def subscribe(self,topic,callback):
+		while Blocky.Global.flag_ONLINE == False :
+			await asyncio.sleep_ms(100)
+			
 		if self.state != 1 or not topic:
 			return 
 		topic = self.config.get('auth_key') + '/user/' + topic
 		self.mqtt.subscribe(topic)
 		self.message_handlers[topic] = callback
 		
-network = Network()
+		
 		
 			
 			
 		
+
+
 
 
 
