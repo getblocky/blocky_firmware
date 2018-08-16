@@ -1,3 +1,4 @@
+#version=1.0
 from machine import Pin , PWM
 from Blocky.Pin import getPin
 from ujson import dumps , loads

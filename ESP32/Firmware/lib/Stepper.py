@@ -1,3 +1,4 @@
+#version=1.0
 from Blocky.Timer import *
 from Blocky.Pin import getPin 
 from machine import Pin

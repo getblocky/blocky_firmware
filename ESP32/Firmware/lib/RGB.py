@@ -1,3 +1,4 @@
+#version=1.0
 from machine import Pin
 from neopixel import NeoPixel
 from Blocky.Pin import getPin

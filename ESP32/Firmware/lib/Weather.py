@@ -1,3 +1,4 @@
+#version=1.0
 # AN2001 
 from machine import Pin
 from dht import *

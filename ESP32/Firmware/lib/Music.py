@@ -1,3 +1,4 @@
+#version=1.0
 #from blocky_utility import get_free_UART TODO
 from machine import Pin , UART
 from Blocky.Pin import getPin

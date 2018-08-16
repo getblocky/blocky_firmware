@@ -1,3 +1,4 @@
+#version=1.0
 import Blocky.uasyncio as asyncio
 from Blocky.asyn import Cancellable , cancellable
 from Blocky.Pin import getPin

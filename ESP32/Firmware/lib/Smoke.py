@@ -1,3 +1,4 @@
+#version=1.0
 from machine import ADC , Pin 
 from Blocky.Pin import getPin
 

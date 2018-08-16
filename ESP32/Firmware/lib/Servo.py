@@ -1,3 +1,4 @@
+#version=1.0
 from Blocky.Pin import *
 from machine import Pin,PWM
 class Servo:
