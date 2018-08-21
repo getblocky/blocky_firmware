@@ -1,11 +1,9 @@
-import socket , struct , gc
-from Blocky.Timer import runtime
-from time import sleep_ms
 class MQTTException(Exception):
-		pass
-
+	pass
+import sys
+core = sys.modules['Blocky.Core']
 class MQTTClient:
-
+	
 	def __init__(self, client_id, server, port=0, user=None, password=None, keepalive=0,ssl=False, ssl_params={}):
 		if port == 0:
 			port = 8883 if ssl else 1883
@@ -25,9 +23,9 @@ class MQTTClient:
 		self.lw_retain = False
 		self.server = server
 		self.port = port
-		self.last = runtime()
+		self.last = core.Timer.runtime()
 	def _send_str(self, s):
-		self.sock.write(struct.pack("!H", len(s)))
+		self.sock.write(core.struct.pack("!H", len(s)))
 		self.sock.write(s)
 
 	def _recv_len(self):
@@ -52,8 +50,8 @@ class MQTTClient:
 		self.lw_retain = retain
 
 	def connect(self, clean_session=True):
-		self.addr = socket.getaddrinfo(self.server, self.port)[0][-1]
-		self.sock = socket.socket()
+		self.addr = core.socket.getaddrinfo(self.server, self.port)[0][-1]
+		self.sock = core.socket.socket()
 		self.sock.connect(self.addr)
 		if self.ssl:
 			import ussl
@@ -74,119 +72,4 @@ class MQTTClient:
 			msg[9] |= self.lw_retain << 5
 		self.sock.write(msg)
 		#print(hex(len(msg)), hexlify(msg, ":"))
-		self._send_str(self.client_id)
-		if self.lw_topic:
-			self._send_str(self.lw_topic)
-			self._send_str(self.lw_msg)
-		if self.user is not None:
-			self._send_str(self.user)
-			self._send_str(self.pswd)
-		resp = self.sock.read(4)
-		assert resp[0] == 0x20 and resp[1] == 0x02
-		if resp[3] != 0:
-			raise MQTTException(resp[3])
-		return resp[2] & 1
-
-	def disconnect(self):
-		self.sock.write(b"\xe0\0")
-		self.sock.close()
-
-	def ping(self):
-		self.sock.write(b"\xc0\0")
-
-	def publish(self, topic, msg, retain=False, qos=0):
-		if runtime() - self.last < 20:
-			sleep_ms(1)
-		self.last = runtime()
-		try :
-			pkt = bytearray(b"\x30\0\0\0")
-			pkt[0] |= qos << 1 | retain
-			sz = 2 + len(topic) + len(msg)
-			if qos > 0:
-				sz += 2
-			assert sz < 2097152
-			i = 1
-			while sz > 0x7f:
-				pkt[i] = (sz & 0x7f) | 0x80
-				sz >>= 7
-				i += 1
-			pkt[i] = sz
-			#print(hex(len(pkt)), hexlify(pkt, ":"))
-			self.sock.write(pkt, i + 1)
-			self._send_str(topic)
-			if qos > 0:
-				self.pid += 1
-				pid = self.pid
-				struct.pack_into("!H", pkt, 0, pid)
-				self.sock.write(pkt, 2)
-			self.sock.write(msg)
-			if qos == 1:
-				while 1:
-					op = self.wait_msg()
-					if op == 0x40:
-						sz = self.sock.read(1)
-						assert sz == b"\x02"
-						rcv_pid = self.sock.read(2)
-						rcv_pid = rcv_pid[0] << 8 | rcv_pid[1]
-						if pid == rcv_pid:
-							return
-			elif qos == 2:
-				assert 0
-		except Exception:
-			from Blocky.Network import network
-			network.connect()
-	def subscribe(self, topic, qos=0):
-		assert self.cb is not None, "Subscribe callback is not set"
-		pkt = bytearray(b"\x82\0\0\0")
-		self.pid += 1
-		struct.pack_into("!BH", pkt, 1, 2 + 2 + len(topic) + 1, self.pid)
-		#print(hex(len(pkt)), hexlify(pkt, ":"))
-		self.sock.write(pkt)
-		self._send_str(topic)
-		self.sock.write(qos.to_bytes(1, "little"))
-		while 1:
-			op = self.wait_msg()
-			if op == 0x90:
-				resp = self.sock.read(4)
-				#print(resp)
-				assert resp[1] == pkt[2] and resp[2] == pkt[3]
-				if resp[3] == 0x80:
-					raise MQTTException(resp[3])
-				return
-
-	# Wait for a single incoming MQTT message and process it.
-	# Subscribed messages are delivered to a callback previously
-	# set by .set_callback() method. Other (internal) MQTT
-	# messages processed internally.
-	def wait_msg(self):
-		res = self.sock.read(1)
-		self.sock.setblocking(False)
-		if res is None:
-			return None
-		if res == b"\xd0":	# PINGRESP
-			sz = self.sock.read(1)[0]
-			assert sz == 0
-			return None
-		op = res[0]
-		if op & 0xf0 != 0x30:
-			return op
-		sz = self._recv_len()
-		topic_len = self.sock.read(2)
-		topic_len = (topic_len[0] << 8) | topic_len[1]
-		topic = self.sock.read(topic_len)
-		sz -= topic_len + 2
-		if op & 6:
-			pid = self.sock.read(2)
-			pid = pid[0] << 8 | pid[1]
-			sz -= 2
-		msg = self.sock.read(sz)
-		self.cb(topic, msg)
-		if op & 6 == 2:
-			pkt = bytearray(b"\x40\x02\0\0")
-			struct.pack_into("!H", pkt, 2, pid)
-			self.sock.write(pkt)
-		elif op & 6 == 4:
-			assert 0
-
-	# Checks whether a pending message from server is available.
-	# If
+		self._send_str(

@@ -1,52 +1,46 @@
 #version=1.0
 # AN2001 
-from machine import Pin
 from dht import *
-from Blocky.Pin import getPin
-from Blocky.Timer import runtime
-import Blocky.uasyncio as asyncio
-from Blocky.asyn import  Cancellable
 
 class Weather:
 	def __init__ (self , port,module='DHT11'):
-		pin = getPin(port)
-		if (pin[0] == None):
+		self.port = port
+		self.p = core.getPort(port)
+		if (self.pin[0] == None):
 			return 
-		if module == 'DHT11': self.weather = DHT11(Pin(pin[0]))
-		elif module == 'DHT22': self.weather = DHT22(Pin(pin[0]))
-		elif module == 'DHTBase': self.weather = DHTBase(Pin(pin[0]))
+		if module == 'DHT11': 
+			self.weather = DHT11(core.machine.Pin(pin[0]))
 		else :
 			raise NameError
-		self.last_poll = runtime()
-		self.cb_humidity = []
-		self.cb_temperature = []
-		loop = asyncio.get_event_loop()
-		loop.call_soon(self.handler())
+		self.last_poll = core.Timer.runtime()
+		#core.mainthread.create_task(self.handler())
 		
 	def temperature (self):
-		if runtime() - self.last_poll > 2000:
-			self.last_poll = runtime()
+		if core.Timer.runtime() - self.last_poll > 2000:
+			self.last_poll = core.Timer.runtime()
 			try :
 				self.weather.measure()
 			except Exception:
+				core.mainthread.call_soon(core.network.log('Your Weather Module on '+self.port+' is not working !')
 				pass
 		return self.weather.temperature()
 	def humidity(self):
-		if runtime() - self.last_poll > 2000:
-			self.last_poll = runtime()
+		if core.Timer.runtime() - self.last_poll > 2000:
+			self.last_poll = core.Timer.runtime()
 			try :
 				self.weather.measure()
 			except Exception:
+				core.mainthread.call_soon(core.network.log('Your Weather Module on '+self.port+' is not working !')
 				pass
 		return self.weather.humidity()
-	
+	"""
 	def event(self,type,function):
 		if type == 'temperature':
 			self.cb_temperature = [function,'g' if str(function).find('generator') >0 else 'f']
 		if type == 'humidity':
 			self.cb_humidity = [function,'g' if str(function).find('generator') >0 else 'f']
-		
-		
+	"""	
+	"""
 	async def handler(self):
 		
 		while True :
@@ -81,7 +75,7 @@ class Weather:
 					print('weather-event-humd->',err)
 					pass
 				
-			
+	"""
 		
 
 

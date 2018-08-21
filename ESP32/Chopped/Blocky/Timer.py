@@ -1,7 +1,5 @@
 
 
-from time import *
-
 """
 Main Timer Variable 
 [0] :	[Low] Time before feeding
@@ -17,21 +15,17 @@ Timer Usage :;
 	
 """
 
-TimerInfo = [ ticks_ms() , ticks_ms()  , None , None ]
 
 # Provide an non-ovf timer count 
 def runtime():
-	global TimerInfo
-	now = ticks_ms()
-	if now < TimerInfo[0]:offset =  (1073741823 - TimerInfo[1] + now)
-	else :	offset =  (now - TimerInfo[0])
-	TimerInfo[1] += offset;TimerInfo[0] = now
-	return TimerInfo[1]
+	import Blocky.Core as core
+	core.TimerInfo = [ core.time.ticks_ms() , core.time.ticks_ms()  , None , None ]
+
+	now = core.time.ticks_ms()
+	if now < core.TimerInfo[0]:offset =  (1073741823 - core.TimerInfo[1] + now)
+	else :	offset =  (now - core.TimerInfo[0])
+	core.TimerInfo[1] += offset;core.TimerInfo[0] = now
+	return core.TimerInfo[1]
 # This function should be call randomly every 10 minutes
 
-
-	
-def sync_time():
-	pass
-	
 	

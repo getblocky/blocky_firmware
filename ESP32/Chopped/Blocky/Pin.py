@@ -1,4 +1,4 @@
-def getPin(port):
+def getPort(port):
 	if  isinstance(port,int):
 		return [port,port,port]
 	if isinstance(port,tuple):

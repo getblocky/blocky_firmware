@@ -1,11 +1,9 @@
-import socket , struct , gc
-from Blocky.Timer import runtime
-from time import sleep_ms
-import Blocky.uasyncio as asyncio
 class MQTTException(Exception):
-		pass
-
+	pass
+import sys
+core = sys.modules['Blocky.Core']
 class MQTTClient:
+	
 	def __init__(self, client_id, server, port=0, user=None, password=None, keepalive=0,ssl=False, ssl_params={}):
 		if port == 0:
 			port = 8883 if ssl else 1883
@@ -25,9 +23,9 @@ class MQTTClient:
 		self.lw_retain = False
 		self.server = server
 		self.port = port
-		self.last = runtime()
+		self.last = core.Timer.runtime()
 	def _send_str(self, s):
-		self.sock.write(struct.pack("!H", len(s)))
+		self.sock.write(core.struct.pack("!H", len(s)))
 		self.sock.write(s)
 
 	def _recv_len(self):
@@ -52,8 +50,8 @@ class MQTTClient:
 		self.lw_retain = retain
 
 	def connect(self, clean_session=True):
-		self.addr = socket.getaddrinfo(self.server, self.port)[0][-1]
-		self.sock = socket.socket()
+		self.addr = core.socket.getaddrinfo(self.server, self.port)[0][-1]
+		self.sock = core.socket.socket()
 		self.sock.connect(self.addr)
 		if self.ssl:
 			import ussl
@@ -94,10 +92,10 @@ class MQTTClient:
 	def ping(self):
 		self.sock.write(b"\xc0\0")
 
-	def publish(self, topic, msg, retain=False, qos=0):
-		if runtime() - self.last < 20:
-			sleep_ms(1)
-		self.last = runtime()
+	async def publish(self, topic, msg, retain=False, qos=0):
+		if core.Timer.runtime() - self.last < 20:
+			core.time.sleep_ms(1)
+		self.last = core.Timer.runtime()
 		try :
 			pkt = bytearray(b"\x30\0\0\0")
 			pkt[0] |= qos << 1 | retain
@@ -117,7 +115,7 @@ class MQTTClient:
 			if qos > 0:
 				self.pid += 1
 				pid = self.pid
-				struct.pack_into("!H", pkt, 0, pid)
+				core.struct.pack_into("!H", pkt, 0, pid)
 				self.sock.write(pkt, 2)
 			self.sock.write(msg)
 			if qos == 1:
@@ -132,14 +130,15 @@ class MQTTClient:
 							return
 			elif qos == 2:
 				assert 0
-		except Exception:
-			from Blocky.Network import network
-			network.connect()
-	def subscribe(self, topic, qos=0):
+		except Exception as err:
+			print('mqtt-publish->',err)
+			await core.network.connect()
+			await self.publish(topic,msg,retain,qos)
+	async def subscribe(self, topic, qos=0):
 		assert self.cb is not None, "Subscribe callback is not set"
 		pkt = bytearray(b"\x82\0\0\0")
 		self.pid += 1
-		struct.pack_into("!BH", pkt, 1, 2 + 2 + len(topic) + 1, self.pid)
+		core.struct.pack_into("!BH", pkt, 1, 2 + 2 + len(topic) + 1, self.pid)
 		#print(hex(len(pkt)), hexlify(pkt, ":"))
 		self.sock.write(pkt)
 		self._send_str(topic)
@@ -181,12 +180,11 @@ class MQTTClient:
 			pid = pid[0] << 8 | pid[1]
 			sz -= 2
 		msg = self.sock.read(sz)
-		loop = asyncio.get_event_loop()
-		loop.call_soon(self.cb(topic,msg))
+		core.mainthread.call_soon(self.cb(topic,msg))
 		#self.cb(topic, msg)
 		if op & 6 == 2:
 			pkt = bytearray(b"\x40\x02\0\0")
-			struct.pack_into("!H", pkt, 2, pid)
+			core.struct.pack_into("!H", pkt, 2, pid)
 			self.sock.write(pkt)
 		elif op & 6 == 4:
 			assert 0

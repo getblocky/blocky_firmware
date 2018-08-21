@@ -1,135 +1,73 @@
 
-#1.First step , check for json file
-try :
-	from ujson import loads
-	f = open('config.json','r')
-	config = loads(f.read())
-	f.close()
-	if not config.get('auth_key',False)\
-	or not config.get('known_networks',False):
-		raise KeyError('Missing key information')
-except Exception:
-	print('Missing required info in config. Enter config mode')
-	import Blocky.ConfigManager#exec(open('Blocky/ConfigManager.py').read())
-	
-print('Finished loading config file' , config)
+"""
+	Firmware Version 2 
+	+ Add support for asynchorous programming 
+	+ Add support for background boot mode 
+	+ Add support for instant OTA , no reset 
+	+ Start memory management 
+	+ Add support for non-volatile setup
+	+ Add support for LED indicator
+	+ Add support for safe firmware update (TODO)
+	# Add support for automatic lib update 
+"""
 
+import Blocky.Core as core
 
-
-
-from Blocky.Timer import *
-from Blocky.Network import network
+core.mainthread = core.asyncio.get_event_loop()
 from Blocky.Indicator import indicator
-import Blocky.uasyncio as asyncio
-from machine import Pin
-if  Pin(12,Pin.IN,Pin.PULL_UP).value():
-	import Blocky.ConfigManager#exec(open('Blocky/ConfigManager.py').read())
+core.indicator = indicator
+wdt_timer = core.machine.Timer(1)
 
-FLAG_UPCODE = False
-import Blocky.Global
-async def service():
-	while True :
-		await asyncio.sleep_ms(300)
-		
-		if Blocky.Global.flag_UPCODE == True:
-			#perform clean up here 
-			# ::Section1:: Coroutine -> Handle by Network 
-			from Blocky.asyn import Cancellable
-			
-			await Cancellable.cancel_all()
-			print(' ::Section2:: Variables ')
-			global GLOBAL_CAPTURE
-			print(GLOBAL_CAPTURE)
-			for x in list(globals().keys()):
-				if x not in GLOBAL_CAPTURE:
-					
-					print(x)
-					del globals()[x]
-			list_pin = [4,33,16,32,22,25,26,14,18,13,17,27,19]
-			print(' ::Section3:: Pin IRQ , PWM ')
-			from machine import Pin , PWM
-			for x in list_pin:
-				PWM(Pin(x)).deinit()
-				Pin(x).irq(None)
-			print(' ::Section4:: Network Topic')
-			network.message_handlers = {}
-			network.echo = []
-			from json import loads
-			network.config = loads(open('config.json','r').read())
-			register_data = {'event': 'register', 
-			'chipId': CHIP_ID, 
-			'firmwareVersion': '1.0',
-			'name': network.config.get('device_name', 'Blocky_' + CHIP_ID),
-			'type': 'esp32'
-			}
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/ota/#')
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/run/#')
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/rename/#')
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/reboot/#')
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/upload/#')
-			network.mqtt.subscribe(network.config['auth_key'] + '/sys/' + CHIP_ID + '/upgrade/#')
-			network.mqtt.publish(topic=network.config['auth_key'] + '/sys/', msg=dumps(register_data))
-		
-			print('Ran by Flag')
+def failsafe(source):
+	try :
+		if core.Timer.runtime() - core.network.last_call > 5000 :
+			print('Yppppppppppppppppppppppppppppppppppppppppppppp')
 			try :
-				exec(open('user_code.py').read())
-			except Exception as err:
-				network.log('Your code crashed somehow -> ' + err)
+				f = open('user_code.py','w')
+				f.close()
+			except :
+				pass
 			
-			Blocky.Global.flag_UPCODE= False
-		network.process()
-		
-def require_network():
-	network.connect()
-	loop = asyncio.get_event_loop()
-	loop.call_soon(service())
-
-try :
-  network_required = open('user_code.py','r').read().find('network.') > 0
-except :
-  network_required = True
-network_required = True
-if network_required :
-	require_network()
-	
-else :
-	from Blocky.Button import *
-	button  = Button(12)
-	from Blocky.Network import network
-	button.event('pressed' , 1 , require_network)
-	
+			core.machine.reset()
+	except :
+		print('Doooooooooooom')
+		try :
+			f = open('user_code.py','w')
+			f.close()
+		except :
+			pass
+		for x in range(20):
+			core.indicator.rgb[0] = (255,0,0)
+			core.indicator.rgb.write()
+			core.time.sleep_ms(50)
+			core.indicator.rgb[0] = (0,0,0)
+			core.indicator.rgb.write()
+			core.time.sleep_ms(50)
+		core.machine.reset()
 
 
 
 
-# network will do the wifi and broker
-from Blocky.MQTT import *
-from Blocky.Network import *
-import _thread
-loop = asyncio.get_event_loop()
-GLOBAL_CAPTURE = list(globals().keys()) 
-try :
-	exec(open('user_code.py').read())
-except Exception as err:
-	network.log('Your code crashed because of "' + str(err) + '"')
-	
-# TODO :
-"""
- If inside the setup block contains a blocking operation , the chip will be bricked
- 
-"""
-
-
-def atte():
-  while True :
-    try :
-      loop.run_forever()
-    except Exception as e:
-        import sys
-        sys.print_exception(e)
-      
-
-_thread.start_new_thread(atte,())
-
-
-
+# developer sector , delete afterfinish\
+#=================================================================
+import ssd1306
+n = ssd1306.SSD1306_I2C(128,64,core.machine.I2C (scl = core.machine.Pin(26,core.machine.Pin.IN,\
+core.machine.Pin.PULL_UP) , sda = core.machine.Pin(25,core.machine.Pin.IN,core.machine.Pin.PULL_UP)))
+adc = core.machine.ADC( core.machine.Pin(37))
+adc.atten(core.machine.ADC.ATTN_2_5DB)
+async def mem_watch():
+	while True :
+		core.gc.collect()
+		n.fill(0)
+		n.text('Heap:     ' + str(core.gc.mem_free()) , 0 , 0)
+		n.text('Stack:    ' + str(core.micropython.stack_use()) , 0,10)
+		n.text('Analog:    ' + str(adc.read()) , 0, 20)
+		n.text('R : ' + str(core.Timer.runtime()),0,30)
+		try :
+			n.text('_' + core.network.last_call,0,50)
+		except :
+			pass
+		n.show()
+		await core.asyncio.sleep_ms(100)
+core.mainthread.create_task(mem_watch())
+#========================

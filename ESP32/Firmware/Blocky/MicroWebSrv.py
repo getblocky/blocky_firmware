@@ -1,5 +1,5 @@
-import socket,json,ustruct,gc
-import Blocky.uasyncio as asyncio 
+import sys 
+core = sys.modules['Blocky.Core']
 
 class MicroWebSrv :
 	
@@ -45,7 +45,7 @@ class MicroWebSrv :
 	def _tryAllocByteArray(size) :
 		for x in range(10) :
 			try :
-				gc.collect()
+				core.gc.collect()
 				return bytearray(size)
 			except :
 				pass
@@ -54,8 +54,8 @@ class MicroWebSrv :
 	def _tryStartThread(func, args=()) :
 		for x in range(10) :
 			try :
-				gc.collect()
-				start_new_thread(func, args)
+				core.gc.collect()
+				core.start_new_thread(func, args)
 				return True
 			except :
 				pass
@@ -106,14 +106,12 @@ class MicroWebSrv :
 	
 	async def _socketProcess(self) :
 		try :
-			import network as Network
 			self._started = True
-			wlan_ap = Network.WLAN(Network.AP_IF)
+			wlan_ap = core.Network.WLAN(core.Network.AP_IF)
 			wlan_ap.active(True)
 			print('START AP')
-			import Blocky.Global
-			while Blocky.Global.flag_ONLINE == False :
-				await asyncio.sleep_ms(200)
+			while core.flag.ONLINE == False :
+				await core.asyncio.sleep_ms(200)
 				if wlan_ap.isconnected():
 					try :
 						try :
@@ -124,11 +122,10 @@ class MicroWebSrv :
 						print(client , cliAddr)
 						print('socket->Accepted')
 						a = self._client(self, client, cliAddr)
-						await a._processRequest()
+						a._processRequest()
 					except Exception as err :
-						import sys
 						print('client->',err)
-						sys.print_exception(err)
+						core.sys.print_exception(err)
 				
 			self._started = False
 			print('CLOSE AP')
@@ -139,12 +136,15 @@ class MicroWebSrv :
 	
 	async def Start(self, threaded=True) :
 		if not self._started :
-			self._socket = socket.socket( socket.AF_INET,
-										  socket.SOCK_STREAM,
-										  socket.IPPROTO_TCP )
-			self._socket.setsockopt( socket.SOL_SOCKET,
-									 socket.SO_REUSEADDR,
+			reset_timer = core.machine.Timer(1)
+			reset_timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1800000,callback =lambda t:core.machine.reset)
+			self._socket = core.socket.socket( core.socket.AF_INET,
+										  core.socket.SOCK_STREAM,
+										  core.socket.IPPROTO_TCP )
+			self._socket.setsockopt( core.socket.SOL_SOCKET,
+									 core.socket.SO_REUSEADDR,
 									 1 )
+									 
 			self._socket.bind(self._srvAddr)
 			self._socket.listen(1)
 			self._socket.setblocking(False)
@@ -210,7 +210,7 @@ class MicroWebSrv :
 			self._contentLength = 0
 			#await self._processRequest()
 		
-		async def _processRequest(self) :
+		def _processRequest(self) :
 			try :
 				response = MicroWebSrv._response(self)
 				if self._parseFirstLine(response) :
@@ -222,20 +222,8 @@ class MicroWebSrv :
 								#routeHandler(self, response)
 								#loop = asyncio.get_event_loop()
 								#loop.create_task(routeHandler(self,response))
-								await routeHandler(self,response)
-							elif self._method.upper() == "GET" :
-								filepath = self._microWebSrv._physPathFromURLPath(self._resPath)
-								if filepath :
-									if MicroWebSrv._isPyHTMLFile(filepath) :
-										response.WriteResponsePyHTMLFile(filepath)
-									else :
-										contentType = self._microWebSrv.GetMimeTypeFromFilename(filepath)
-										if contentType :
-											response.WriteResponseFile(filepath, contentType)
-										else :
-											response.WriteResponseForbidden()
-								else :
-									response.WriteResponseNotFound()
+								routeHandler(self,response)
+							
 							else :
 								response.WriteResponseMethodNotAllowed()
 						elif upg == 'websocket' and 'MicroWebSocket' in globals() \
@@ -252,10 +240,10 @@ class MicroWebSrv :
 					else :
 						response.WriteResponseBadRequest()
 			except Exception as err:
-				import sys 
-				sys.print_exception(err)
+				core.sys.print_exception(err)
 				#response.WriteResponseInternalServerError()
 			try :
+				print('Socket Close')
 				self._socket.close()
 			except :
 				pass
@@ -337,7 +325,11 @@ class MicroWebSrv :
 		
 		def _write(self, data) :
 			try :
-				return self._client._socket.write(data)
+				if isinstance(data , str):
+					return self._client._socket.write(data)
+				elif isinstance(data , list):
+					for x in data :
+						self._client._socket.write(x)
 			except Exception as err:
 				print('socket->_write->' , err)
 		
@@ -374,7 +366,12 @@ class MicroWebSrv :
 		def WriteResponse(self, code, headers, contentType, contentCharset, content) :
 			contentCharset = None
 			try :
-				contentLength = len(content) if content else 0
+				if isinstance(content , str):
+					contentLength = len(content) if content else 0
+				elif isinstance(content , list):
+					contentLength = 0
+					for x in content :
+						contentLength+= len(x)
 				#self._writeBeforeContent(code, headers, contentType, contentCharset, contentLength)
 				
 				self._writeFirstLine(code)
@@ -398,44 +395,15 @@ class MicroWebSrv :
 					self._write(content)
 				return True
 			except MemoryError as err:
-				print(err)
+				print('mwsr->wR',err)
 				return False
 		
-		def WriteResponsePyHTMLFile(self, filepath, headers=None) :
-			if 'MicroWebTemplate' in globals() :
-				with open(filepath, 'r') as file :
-					code = file.read()
-				mWebTmpl = MicroWebTemplate(code, escapeStrFunc=MicroWebSrv.HTMLEscape)
-				try :
-					return self.WriteResponseOk(headers, "text/html", "UTF-8", mWebTmpl.Execute())
-				except Exception as ex :
-					return self.WriteResponse( 500,
-											   None,
-											   "text/html",
-											   "UTF-8",
-											   self._execErrCtnTmpl % {
-													'module'  : 'PyHTML',
-													'message' : str(ex)
-											   } )
-			return self.WriteResponseNotImplemented()
-		
 
-		def WriteResponseFileAttachment(self, filepath, attachmentName, headers=None) :
-			if not isinstance(headers, dict) :
-				headers = { }
-			headers["Content-Disposition"] = "attachment; filename=\"%s\"" % attachmentName
-			return self.WriteResponseFile(filepath, None, headers)
-		
 		def WriteResponseOk(self, headers=None, contentType=None, contentCharset=None, content=None) :
 			return self.WriteResponse(200, headers, contentType, contentCharset, content)
 		
-		def WriteResponseJSONOk(self, obj=None, headers=None) :
-			return self.WriteResponseOk(headers, "application/json", "UTF-8", dumps(obj))
-		
-		def WriteResponseRedirect(self, location) :
-			headers = { "Location" : location }
-			return self.WriteResponse(302, headers, None, None, None)
-		
+
+
 		def WriteResponseError(self, code) :
 			responseCode = self._responseCodes.get(code, ('Unknown reason', ''))
 			return self.WriteResponse( code,
@@ -503,6 +471,7 @@ class MicroWebSrv :
 		_responseCodes = {
 			
 		}
+
 
 
 

@@ -1,21 +1,14 @@
 #from Blocky.Indicator import indicator
-from machine import unique_id , reset
-from binascii import hexlify 
-import gc
-from ujson import dumps , loads
-import Blocky.uasyncio as asyncio
-from Blocky.asyn import cancellable , Cancellable
-BROKER = 'broker.getblocky.com'
-CHIP_ID = hexlify(unique_id()).decode('ascii')
-from machine import Timer , Pin
-import Blocky.Global 
 
-class BootMode :	
+import  sys
+core = sys.modules['Blocky.Core']
+class BootMode :
+	
 	def __init__ (self):
-		import network as Network
-		self.wlan_ap =  Network.WLAN(Network.AP_IF)
-		self.wlan_sta =  Network.WLAN(Network.STA_IF)
+		self.wlan_ap =  core.Network.WLAN(core.Network.AP_IF)
+		self.wlan_sta =  core.Network.WLAN(core.Network.STA_IF)
 		self.status = 'start'
+		self.content = ''
 	
 	async def connect(self, ssid, password):
 		self.wlan_sta.active(True)
@@ -24,7 +17,7 @@ class BootMode :
 		print('Connecting to wifi')
 		#indicator.animate('pulse',(100,50,0),10)
 		while not self.wlan_sta.isconnected() | (a > 99) :
-			await asyncio.sleep_ms(100)
+			await core.asyncio.sleep_ms(100)
 			a+=1
 			print('.', end='')
 		
@@ -39,26 +32,25 @@ class BootMode :
 			self.wifi_status = 2
 			self.wlan_sta.active(False)
 			return False
-	async def _httpHandlerIndexGet(self, httpClient, httpResponse):
-		print('Get index request' )
-		"""
-		f = open('Blocky/index.html', 'r')
-		a = f.readlines()
-		f.close()
-		content = ''
-		for x in a:
-			content += x
-		"""
-		f = open('Blocky/index.html', 'r')
-		content = ''
-		for line in f:
-			content = content + line
-			
-		print('Content ------------>' , len(content) , end = '')
-		print(httpResponse.WriteResponseOk( headers = None,contentType= "text/html",	contentCharset = "UTF-8",	content = content) , end = '')
-		print('--> OK')
+	def _httpHandlerIndexGet(self, httpClient, httpResponse):
+		print('Get index request , memoryview' )
+		# Heap fragmentation is our enemy
+		content = []
+		with open('Blocky/index.html') as f :
+			while True :
+				try :
+					temp = f.read(100)
+					if len(temp) == 0 : 
+						break
+					content.append(temp)
+				except :
+					print(len(content))
+		print('Content = ' , len(content) , end = '')
+		httpResponse.WriteResponseOk( headers = None,contentType= "text/html",	contentCharset = "UTF-8",	content = content) 
+		print('Done')
 		
-	async def _httpHandlerCheckStatus(self, httpClient, httpResponse):
+		
+	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
 		print('Get check status request')
 		import Blocky.Global
 		if Blocky.Global.flag_ONLINE == True:
@@ -81,16 +73,15 @@ class BootMode :
 			machine.reset()
 		"""
 
-	async def _httpHandlerSaveConfig(self, httpClient, httpResponse):
-		from ujson import loads
+	def _httpHandlerSaveConfig(self, httpClient, httpResponse):
 		request_json  = ''
-		request_json = loads(httpClient.ReadRequestContent().decode('ascii'))
+		request_json = core.json.loads(httpClient.ReadRequestContent().decode('ascii'))
 		self.wifi_status = 0
 		httpResponse.WriteResponseOk(headers = None,contentType= "text/html",	contentCharset = "UTF-8",content = 'OK')
 		self.wlan_sta.connect(request_json['ssid'], request_json['password'])
 		print('client->saveconfig: Trying to connect to ' + str(request_json) , end = '')
-		for x in range(100):
-			await asyncio.sleep_ms(100)
+		for x in range(130):
+			core.time.sleep_ms(100)
 			
 			if self.wlan_sta.isconnected():
 				# save config
@@ -100,7 +91,7 @@ class BootMode :
 				
 				config = {}
 				try :
-					config = loads(open('config.json').read())
+					config = core.json.loads(open('config.json').read())
 				except :
 					pass
 				if not config.get('known_networks'):
@@ -120,25 +111,22 @@ class BootMode :
 						print('Add new network')
 				print('Devicename')
 				config['device_name'] = request_json['deviceName']
-				config['auth_key'] = request_json['auth_key']
+				config['auth_key'] = request_json['authKey']
 				
 				
 				
 				f = open('config.json', 'w')
-				f.write(dumps(config))
+				f.write(core.json.dumps(config))
 				f.close()
-				import Blocky.Global
-				Blocky.Global.flag_ONLINE = True
-				print('Done' , config)
+				core.flag.ONLINE = True
 				break
 			else :
-				import Blocky.Global
-				Blocky.Global.flag_ONLINE = False
+				core.flag.ONLINE = False
 				print('.' , end = '')
 	def is_ascii(self, s):
 		return all(ord(c) < 128 for c in s)
 	
-	async def _httpHandlerScanNetworks(self, httpClient, httpResponse) :
+	def _httpHandlerScanNetworks(self, httpClient, httpResponse) :
 		print('scanap->' , end = '')
 		self.wlan_sta.active(True)
 		
@@ -147,28 +135,26 @@ class BootMode :
 		for nw in raw:
 			networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
 		
-		content = dumps(networks)
+		content = core.json.dumps(networks)
 		print(len(networks) , 'networks detected')
 		httpResponse.WriteResponseOk(headers = None,contentType= "application/json",contentCharset = "UTF-8",content = content)
 		
 	async def Start(self):
-		from Blocky.Indicator import indicator
+		
 		#This function will run config boot mode in background ! 
 		#As an replacement for ConfigManager.py
 		#When a network call is erro , it will create this task in 
 		#main thread as an async function 
 		#As such , this won't block
 		
-		gc.collect()
-		if gc.mem_free() < 20000 :
-			import machine 
-			machine.reset()
+		core.gc.collect()
+		if core.gc.mem_free() < 20000 :
+			core.machine.reset()
 		
 		
-		import network , socket , binascii , re , ustruct , ujson , machine
 		
 		server = None 
-		id = binascii.hexlify(machine.unique_id()).decode('ascii')
+		id = core.binascii.hexlify(core.machine.unique_id()).decode('ascii')
 		uuid = [id[i:i+2] for i in range(0, len(id), 2)]
 
 		max_index = 0 ; max_value = 0
@@ -187,11 +173,16 @@ class BootMode :
 		if max_index == 4 : color = ['purple',(88,86,214)]
 		if max_index == 5 : color = ['yello',(255,204,0)]
 			
+		if core.eeprom.get('first_start') == 1:
+			core.mainthread.create_task(core.indicator.rainbow(core.flag.ONLINE,100,1) )# when Blocky.Global.flag_ONLINE is True , it stop
+			ap_name = "It's me , your " + color[0].upper() + ' Blocky'
+		else :
+			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.ONLINE , 5) )
+			ap_name = 'Blocky ' + color[0].upper() +' '+ core.binascii.hexlify(core.machine.unique_id()).decode('ascii')[0:4]
 		
-		ap_name = 'Blocky ' + color[0].upper() +' '+ binascii.hexlify(machine.unique_id()).decode('ascii')[0:4]
 		print(ap_name)
-		loop= asyncio.get_event_loop()
-		loop.create_task(indicator.heartbeat( color[1] , 1 , Blocky.Global.flag_ONLINE , 5) )
+		
+		
 		ap_password = ''
 		wifi_status = 0
 		
@@ -220,3 +211,5 @@ class BootMode :
 		await server.Start()
 		print('bootmode-> completed')
 	
+
+

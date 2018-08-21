@@ -1,33 +1,51 @@
 #version=1.0
 #from blocky_utility import get_free_UART TODO
-from machine import Pin , UART
-from Blocky.Pin import getPin
-from time import sleep_ms as delay
-from time import ticks_diff,ticks_ms
-import binascii
+import sys
+core = sys.modules['Blocky.Core']
+
 class Music :
 	def __init__ ( self , port ):
-		pin = getPin(port)
+		self.port = port
+		self.p = core.getPort(port)
 		if (pin[0]==None or pin[1] == None):
+			core.mainthread.call_soon(core.network.log("Your Music Module can't be used on  "+self.port)
 			return
-		self.bus = UART(1 , 9600)
-		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = pin[0] , tx = pin[1] )
+		self.bus = None
 	
 	def sendStack(self , cmd , param1 , param2):
 		# plug and play
-		self.bus = UART(1 , 9600)
-		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = pin[0] , tx = pin[1] )
+		self.bus = core.machine.UART(1 , 9600)
+		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = self.p[0] , tx = self.p[1] )
 		# empty the buffer
 		while self.bus.any():
 			self.bus.read()
 			
 		buff = bytearray([0x7E, 0xFF, 0x06, cmd,0x01, param1, param2, 0xEF])
-		self.bus.write(buff)
-		nowTime = ticks_ms()
+		if self.bus.write(buff) == len(buff):
+			self.bus.deinit()
+		nowTime = core.time.ticks_ms()
+		
 		
 		# no ack 
 
-
+	def _readRegister(self,cmd,param=None):
+		# plug and play
+		self.bus = core.machine.UART(1 , 9600)
+		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = self.p[0] , tx = self.p[1] )
+		
+		nowTime = core.time.ticks_ms()
+		while self.bus.any() :
+			self.bus.read()
+			
+		if param == None :
+			self.sendStack(cmd,0x00,0x00)
+		else :
+			self.sendStack(cmd,param//256,param%256)
+		while not self.bus.any():
+			if core.time.ticks_diff(core.time.ticks_ms() , nowTime) > 200:
+				return None
+		buffer = self.bus.read(10)
+		return buffer[5]*256 + buffer[6]
 		
 	#=====================================================
 	def nextSong(self):
@@ -124,25 +142,3 @@ class Music :
 		return self._readRegister(0x4E,folder)
 	def readFolderCounts(self):
 		return self._readRegister(0x4F)
-	def _readRegister(self,cmd,param=None):
-		# plug and play
-		self.bus = UART(1 , 9600)
-		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = pin[0] , tx = pin[1] )
-		
-		nowTime = ticks_ms()
-		while self.bus.any() :
-			self.bus.read()
-			
-		if param == None :
-			self.sendStack(cmd,0x00,0x00)
-		else :
-			self.sendStack(cmd,param//256,param%256)
-		while not self.bus.any():
-			if ticks_diff(ticks_ms() , nowTime) > 200:
-				return None
-		buffer = self.bus.read(10)
-		return buffer[5]*256 + buffer[6]
-
-
-
-
