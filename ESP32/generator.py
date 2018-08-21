@@ -43,14 +43,11 @@ for x in code :
 		f = open('Chopped/Blocky/' + x , 'w')
 		f.write(code[x][0:LIMIT_SIZE])
 		f.close()
-		for i in range( 1 , math.floor(len(code[x])/LIMIT_SIZE ) ):
+		for i in range( 1 , math.ceil(len(code[x])/LIMIT_SIZE ) ):
 			f = open('Chopped/Blocky/' + x.replace( '.' + x.split('.')[-1]   , '_$' + str(i) +  '.' + x.split('.')[-1]  ) , 'w')
 			f.write(code[x][ LIMIT_SIZE*i :LIMIT_SIZE*(i+1)])
 			f.close()
-		i = math.ceil(len(code[x])/LIMIT_SIZE)
-		f = open('Chopped/Blocky/' + x.replace( '.' + x.split('.')[-1]   , '_$$' +  '.' + x.split('.')[-1]  ) , 'w')
-		f.write(code[x][ LIMIT_SIZE*i : len(code[x]) ])
-		f.close()
+	
 		
 		
 import os 
@@ -98,14 +95,11 @@ for x in code :
 		f = open('Chopped/lib/' + x , 'w')
 		f.write(code[x][0:LIMIT_SIZE])
 		f.close()
-		for i in range( 1 , math.floor(len(code[x])/LIMIT_SIZE ) ):
+		for i in range( 1 , math.ceil(len(code[x])/LIMIT_SIZE ) ):
 			f = open('Chopped/lib/' + x.replace( '.' + x.split('.')[-1]   , '_$' + str(i) +  '.' + x.split('.')[-1]  ) , 'w')
 			f.write(code[x][ LIMIT_SIZE*i :LIMIT_SIZE*(i+1)])
 			f.close()
-		i = math.ceil(len(code[x])/LIMIT_SIZE)
-		f = open('Chopped/lib/' + x.replace( '.' + x.split('.')[-1]   , '_$$' +  '.' + x.split('.')[-1]  ) , 'w')
-		f.write(code[x][ LIMIT_SIZE*i : len(code[x]) ])
-		f.close()
+		
 		
 		
 		
