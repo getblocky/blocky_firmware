@@ -1,4 +1,6 @@
-.active(True)
+---------------------------
+		self.wlan_sta.active(True)
+		self.wlan_ap.active(True)
 		
 		self.wlan_ap.config(essid = ap_name , password = ap_password	)
 
@@ -17,6 +19,8 @@
 		
 		await server.Start()
 		print('bootmode-> completed')
+		from machine import reset
+		reset()
 	
 
 

@@ -1,4 +1,11 @@
-, preference)
+.format(preference['ssid']))
+			for check in range(0,10):
+				if wlan_sta.isconnected():
+					break
+				print('.',end='')
+				await core.asyncio.sleep_ms(1000)
+			if wlan_sta.isconnected():
+				print('Connected to ' , preference)
 				self.mqtt_connected = False
 				for i in range(10):
 					core.indicator.animate('heartbeat' , (200,100,0))
@@ -44,10 +51,4 @@
 			core.time.sleep_ms(1)
 		for x in range(250,0,-1):
 			core.indicator.rgb[0] = (0,x,x);core.indicator.rgb.write()
-			core.time.sleep_ms(1)	
-		return True 
-		
-	def process(self): # Feed function , run as much as possible
-		core.indicator.animate('heartbeat' , (255,0,0));self.last_call = core.Timer.runtime()
-		if self.state != 1:
-			return 
+			core.tim

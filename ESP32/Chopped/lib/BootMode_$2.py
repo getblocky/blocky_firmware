@@ -1,4 +1,7 @@
-{'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
+ks = []
+		raw = self.wlan_sta.scan()
+		for nw in raw:
+			networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
 		
 		content = core.json.dumps(networks)
 		print(len(networks) , 'networks detected')
@@ -42,7 +45,7 @@
 			core.mainthread.create_task(core.indicator.rainbow(core.flag.ONLINE,100,1) )# when Blocky.Global.flag_ONLINE is True , it stop
 			ap_name = "It's me , your " + color[0].upper() + ' Blocky'
 		else :
-			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.ONLINE , 5) )
+			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.wifi , 5) )
 			ap_name = 'Blocky ' + color[0].upper() +' '+ core.binascii.hexlify(core.machine.unique_id()).decode('ascii')[0:4]
 		
 		print(ap_name)
@@ -54,6 +57,4 @@
 		
 		#-------------------------------------------------
 		
-		#-------------------------------------------------
-		self.wlan_sta.active(True)
-		self.wlan_ap
+		#----------------------

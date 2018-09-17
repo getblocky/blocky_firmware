@@ -1,3 +1,10 @@
+e.sleep_ms(1)	
+		return True 
+		
+	def process(self): # Feed function , run as much as possible
+		core.indicator.animate('heartbeat' , (255,0,0));self.last_call = core.Timer.runtime()
+		if self.state != 1:
+			return 
 		try :
 			self.mqtt.check_msg()
 		except Exception as err:
@@ -50,11 +57,4 @@
 								self.file = open('user_code.py' , 'w')
 								self.file.write(self.ota[piece-1])
 								self.piece += 1
-								self.ota[piece-1] = ''
-							
-							else :
-								if len(self.ota) > piece : # new piece coming 
-									if len(self.ota[piece-1]):
-										self.file.write(self.ota[piece-1])
-										self.ota[piece-1] = ''
-										self.
+								self.ota[piec

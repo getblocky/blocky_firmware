@@ -6,7 +6,8 @@ eeprom = None
 mqtt = None
 BootMode = None
 indicator = None
-
+config = None
+ota_file = None
 
 import time
 import machine
@@ -16,7 +17,7 @@ import binascii
 import json
 import ure
 import gc
-import network as Network
+import network
 
 import sys
 import micropython
@@ -31,12 +32,14 @@ import Blocky.Global as flag
 import Blocky.EEPROM as eeprom
 import Blocky.uasyncio as asyncio
 import Blocky.asyn as asyn
-
-import Blocky.BootMode as BootMode
-import Blocky.MQTT as mqtt
+import Blocky.Timer as Timer
 from Blocky.Indicator import indicator
 from Blocky.Pin import getPort
+
+cfn_btn = machine.Pin(12 , machine.Pin.IN , machine.Pin.PULL_UP)
 mainthread = asyncio.get_event_loop()
 TimerInfo =  None
 
-network = None  # Network class started by Main.
+wifi = None # Wifi class started in Main
+
+

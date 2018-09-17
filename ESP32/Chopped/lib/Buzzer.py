@@ -13,6 +13,10 @@ class Buzzer:
 		self.speed = 0
 		self.buzzer = core.machine.Pin(p[0],core.machine.Pin.OUT)
 		self.pwm  = None
+		self.timer = None
+		self.sequence = []
+		self.pos = 0
+		self.playing = False
 	def _handler(self):
 		self.beeptime -= 1
 		if self.beeptime % 2 == 0:
@@ -47,18 +51,40 @@ class Buzzer:
 				self.buzzer.value(not self.buzzer.value())
 	
 	
-	"""
-	async def play(self,sequence):
-		from machine import PWM 
-		self.pwm = PWM(Pin(self.buzzer) , duty = 512)
+	
+	def play(self,sequence):
+		if self.playing == True :
+			return 
 		try :
-			for x in range(len(sequence)):
-				self.pwm.freq(sequence[x][0])
-				await asyncio.sleep_ms(sequence[x][1])
-			self.pwm = None 
-		except Exception as err:
-			print(err)
+			self.time.deinit()
+		except :
 			pass
-	"""
-
-
+		#core.deinit_list.append(self.timer)
+		
+		self.pwm = core.machine.PWM(self.buzzer , duty = 0)
+		
+		if not isinstance(sequence,list):
+			return 
+			
+		self.sequence = sequence
+		self.playing = True
+		self.pos = 0
+		try :
+			self.timer.deinit()
+		except :
+			pass
+			
+		try :
+			self.timer = None
+			self.timer = core.machine.Timer(-1)
+			self.timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1,callback =self.isr_handler)
+		except :
+			pass
+	def isr_handler(self , source):
+		if self.sequence[self.pos][0] ==0:
+			self.pwm.duty(0)
+		else :
+			self.pwm.duty(512)
+			self.pwm.freq(self.sequence[self.pos][0])
+		self.pos += 1
+		if self.pos

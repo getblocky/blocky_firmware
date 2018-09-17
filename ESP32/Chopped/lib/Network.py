@@ -33,7 +33,14 @@ class Network:
 		self.last_call = core.Timer.runtime()
 		
 	#---------------------------------------------------------
-	
+	async def isconnected(self):
+		while True :
+			if core.Network.WLAN(core.Network.STA_IF).isconnected() and \
+				self.mqtt_connected == True :
+				print('@')
+				break 
+			else :
+				await core.asyncio.sleep_ms(1000)
 	async def connect(self):
 		wlan_sta = core.Network.WLAN(core.Network.STA_IF)
 		wlan_sta.active(True)
@@ -50,11 +57,4 @@ class Network:
 		for preference in [p for p in self.config.get('known_networks') if p['ssid'] in wifi_list]:
 			core.indicator.animate('heartbeat' , (100,50,0))
 			wlan_sta.connect(preference['ssid'],preference['password'])
-			print('[',core.Timer.runtime(),'] Connecting to network {0}...'.format(preference['ssid']))
-			for check in range(0,10):
-				if wlan_sta.isconnected():
-					break
-				print('.',end='')
-				await core.asyncio.sleep_ms(1000)
-			if wlan_sta.isconnected():
-				print('Connected to ' 
+			print('[',core.Timer.runtime(),'] Connecting to network {0}...'

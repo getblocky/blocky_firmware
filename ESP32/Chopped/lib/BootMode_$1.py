@@ -39,8 +39,10 @@ ting')
 						config['known_networks'].append({'ssid': request_json['ssid'], 'password': request_json['password']})
 						print('Add new network')
 				print('Devicename')
-				config['device_name'] = request_json['deviceName']
-				config['auth_key'] = request_json['authKey']
+				if len(request_json['device_name']):
+					config['device_name'] = request_json['deviceName']
+				if len(request_json['token']):
+					config['token'] = request_json['token']
 				
 				
 				
@@ -59,7 +61,4 @@ ting')
 		print('scanap->' , end = '')
 		self.wlan_sta.active(True)
 		
-		networks = []
-		raw = self.wlan_sta.scan()
-		for nw in raw:
-			networks.append(
+		networ

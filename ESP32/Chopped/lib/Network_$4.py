@@ -1,4 +1,12 @@
-mer.runtime() < start + timeout *1000 :
+ion(err)
+			print('nw-handler->' , err)
+		finally :
+			core.gc.collect()
+			self.topic = ''
+			self.message = ''
+	
+	async def send(self,topic,data,echo=False,timout = 2):
+		while core.flag.ONLINE == False and core.Timer.runtime() < start + timeout *1000 :
 			await core.asyncio.sleep_ms(100)
 			
 		if self.state!=1 or not topic or not data:

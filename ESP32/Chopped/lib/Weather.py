@@ -1,15 +1,17 @@
 #version=1.0
 # AN2001 
+import sys
+core = sys.modules['Blocky.Core']
 from dht import *
 
 class Weather:
 	def __init__ (self , port,module='DHT11'):
-		self.port = port
-		self.p = core.getPort(port)
-		if (self.pin[0] == None):
+		self.p = port
+		self.pin = core.getPort(port)
+		if (self.p[0] == None):
 			return 
 		if module == 'DHT11': 
-			self.weather = DHT11(core.machine.Pin(pin[0]))
+			self.weather = DHT11(core.machine.Pin(self.pin[0]))
 		else :
 			raise NameError
 		self.last_poll = core.Timer.runtime()
@@ -21,7 +23,7 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.mainthread.call_soon(core.network.log('Your Weather Module on '+self.port+' is not working !')
+				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.temperature()
 	def humidity(self):
@@ -30,7 +32,7 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.mainthread.call_soon(core.network.log('Your Weather Module on '+self.port+' is not working !')
+				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.humidity()
 	"""
@@ -64,4 +66,5 @@ class Weather:
 					print('weather-event-temp->',err)
 					pass
 			if self.weather.humidity() != temp and self.cb_humidity:
-				try 
+				try :
+					if self.

@@ -15,7 +15,7 @@
 	async def _socketProcess(self) :
 		try :
 			self._started = True
-			wlan_ap = core.Network.WLAN(core.Network.AP_IF)
+			wlan_ap = core.network.WLAN(core.network.AP_IF)
 			wlan_ap.active(True)
 			print('START AP')
 			while core.flag.ONLINE == False :

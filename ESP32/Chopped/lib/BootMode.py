@@ -5,8 +5,8 @@ core = sys.modules['Blocky.Core']
 class BootMode :
 	
 	def __init__ (self):
-		self.wlan_ap =  core.Network.WLAN(core.Network.AP_IF)
-		self.wlan_sta =  core.Network.WLAN(core.Network.STA_IF)
+		self.wlan_ap =  core.network.WLAN(core.network.AP_IF)
+		self.wlan_sta =  core.network.WLAN(core.network.STA_IF)
 		self.status = 'start'
 		self.content = ''
 	

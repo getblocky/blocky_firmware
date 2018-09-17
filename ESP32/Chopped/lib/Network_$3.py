@@ -1,4 +1,11 @@
-piece += 1
+e-1] = ''
+							
+							else :
+								if len(self.ota) > piece : # new piece coming 
+									if len(self.ota[piece-1]):
+										self.file.write(self.ota[piece-1])
+										self.ota[piece-1] = ''
+										self.piece += 1
 										
 							"""
 						elif piece == '$' : 
@@ -57,12 +64,4 @@ piece += 1
 				
 					
 		except Exception as err:
-			core.sys.print_exception(err)
-			print('nw-handler->' , err)
-		finally :
-			core.gc.collect()
-			self.topic = ''
-			self.message = ''
-	
-	async def send(self,topic,data,echo=False,timout = 2):
-		while core.flag.ONLINE == False and core.Ti
+			core.sys.print_except

@@ -277,7 +277,10 @@ class LCD ():
 				left =left[0:self.column-len(right)-1]
 				string = left +':' + ' '*(self.column-len(left)-len(right)-1)+ right
 			else :
-				string = left
+				string = left + ' '*(self.column-len(left))
+			
+			if len(string) > self.column :
+				string = string[0:self.column]
 			self.lcd.putstr(string)
 			
 	def backlight(self , state = 'on'):
