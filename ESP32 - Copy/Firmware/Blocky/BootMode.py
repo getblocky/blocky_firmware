@@ -5,8 +5,8 @@ core = sys.modules['Blocky.Core']
 class BootMode :
 	
 	def __init__ (self):
-		self.wlan_ap =  core.Network.WLAN(core.Network.AP_IF)
-		self.wlan_sta =  core.Network.WLAN(core.Network.STA_IF)
+		self.wlan_ap =  core.network.WLAN(core.network.AP_IF)
+		self.wlan_sta =  core.network.WLAN(core.network.STA_IF)
 		self.status = 'start'
 		self.content = ''
 	
@@ -110,8 +110,10 @@ class BootMode :
 						config['known_networks'].append({'ssid': request_json['ssid'], 'password': request_json['password']})
 						print('Add new network')
 				print('Devicename')
-				config['device_name'] = request_json['deviceName']
-				config['auth_key'] = request_json['authKey']
+				if len(request_json['device_name']):
+					config['device_name'] = request_json['deviceName']
+				if len(request_json['token']):
+					config['token'] = request_json['token']
 				
 				
 				
@@ -177,7 +179,7 @@ class BootMode :
 			core.mainthread.create_task(core.indicator.rainbow(core.flag.ONLINE,100,1) )# when Blocky.Global.flag_ONLINE is True , it stop
 			ap_name = "It's me , your " + color[0].upper() + ' Blocky'
 		else :
-			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.ONLINE , 5) )
+			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.wifi , 5) )
 			ap_name = 'Blocky ' + color[0].upper() +' '+ core.binascii.hexlify(core.machine.unique_id()).decode('ascii')[0:4]
 		
 		print(ap_name)
@@ -210,6 +212,8 @@ class BootMode :
 		
 		await server.Start()
 		print('bootmode-> completed')
+		from machine import reset
+		reset()
 	
 
 

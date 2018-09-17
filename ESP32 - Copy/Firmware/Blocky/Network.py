@@ -33,7 +33,14 @@ class Network:
 		self.last_call = core.Timer.runtime()
 		
 	#---------------------------------------------------------
-	
+	async def isconnected(self):
+		while True :
+			if core.Network.WLAN(core.Network.STA_IF).isconnected() and \
+				self.mqtt_connected == True :
+				print('@')
+				break 
+			else :
+				await core.asyncio.sleep_ms(1000)
 	async def connect(self):
 		wlan_sta = core.Network.WLAN(core.Network.STA_IF)
 		wlan_sta.active(True)
