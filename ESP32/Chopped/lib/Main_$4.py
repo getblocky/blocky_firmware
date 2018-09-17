@@ -1,4 +1,6 @@
-, connecting to Blynk')
+wifi is disconnected , Connecting back')
+			await core.wifi.connect(core.config['known_networks'])
+			print('Wifi is on , connecting to Blynk')
 			await core.asyncio.sleep_ms(500)
 			core.mainthread.create_task(core.blynk.run())
 			while not core.flag.blynk :

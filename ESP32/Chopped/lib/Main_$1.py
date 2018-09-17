@@ -18,7 +18,8 @@ True :
 						version = float(line.split('#version=')[1])
 					except :
 						if not library + '.py' in core.os.listdir('Blocky'):
-							list_library.append(library)
+							if library not in list_library:
+								list_library.append(library)
 							print('Library '+library+' need to be downloaded')
 							continue
 						print('Library '+library+' is kept')
@@ -42,10 +43,12 @@ True :
 								
 							if current_version < version :
 								print('Library',library,'is outdated',current_version)
-								list_library.append(library)
+								if library not in list_library:
+									list_library.append(library)
 						l.close()		
 					except :
-						list_library.append(library)
+						if library not in list_library:
+							list_library.append(library)
 						print('Library' , library , 'is weird')
 						
 		f.close()		
@@ -65,8 +68,4 @@ True :
 				try :
 					print('Updating Library -> ' + str(x), end = '')
 					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/'+x+'.py')
-					if response.status_code == 200 :
-						f = open('Blocky/'+x+'.py','w')
-						f.write(response.content)
-						print('#',end = '')
-				
+					if response.s

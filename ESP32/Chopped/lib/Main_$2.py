@@ -1,4 +1,8 @@
-		piece = 0
+tatus_code == 200 :
+						f = open('Blocky/'+x+'.py','w')
+						f.write(response.content)
+						print('#',end = '')
+						piece = 0
 						while True :
 							piece += 1
 							response = None
@@ -65,6 +69,4 @@
 			pass
 		machine.reset()
 					
-async def send_last_word():
-	if "last_word.py" in core.os.listdir():
-		while not core.wifi.wlan_sta.isconnected() or not core.flag.bly
+async def send

@@ -103,7 +103,8 @@ async def run_user_code(direct = False):
 						version = float(line.split('#version=')[1])
 					except :
 						if not library + '.py' in core.os.listdir('Blocky'):
-							list_library.append(library)
+							if library not in list_library:
+								list_library.append(library)
 							print('Library '+library+' need to be downloaded')
 							continue
 						print('Library '+library+' is kept')
@@ -127,10 +128,12 @@ async def run_user_code(direct = False):
 								
 							if current_version < version :
 								print('Library',library,'is outdated',current_version)
-								list_library.append(library)
+								if library not in list_library:
+									list_library.append(library)
 						l.close()		
 					except :
-						list_library.append(library)
+						if library not in list_library:
+							list_library.append(library)
 						print('Library' , library , 'is weird')
 						
 		f.close()		

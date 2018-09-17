@@ -1,4 +1,6 @@
-nk:
+_last_word():
+	if "last_word.py" in core.os.listdir():
+		while not core.wifi.wlan_sta.isconnected() or not core.flag.blynk:
 			await core.asyncio.sleep_ms(500)
 		core.blynk.virtual_write(127,open('last_word.py').read())
 		core.os.remove('last_word.py')
@@ -57,6 +59,4 @@ async def main(online=False):
 		await core.asyncio.sleep_ms(500)
 		# Recover from wifi jittering
 		if not core.wifi.wlan_sta.isconnected():
-			print('Oh Wow , wifi is disconnected , Connecting back')
-			await core.wifi.connect(core.config['known_networks'])
-			print('Wifi is on 
+			print('Oh Wow , 
