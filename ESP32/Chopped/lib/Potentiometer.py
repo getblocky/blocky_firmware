@@ -1,7 +1,7 @@
 #version=1.0
 import sys
 core = sys.modules['Blocky.Core']
-class Light :
+class Potentiometer :
 	def __init__ (self , port , range = 3.3):
 		self.pin = core.getPort(port)
 		if (self.pin[2] == None):
