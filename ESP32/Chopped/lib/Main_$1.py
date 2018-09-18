@@ -1,4 +1,13 @@
-True :
+se recursive while max stack = 39
+	# Damn right =))
+	
+	list_library = []
+	try :
+		f = open('user_code.py')
+		eof = False
+		while eof == False :
+			line = ''
+			while True :
 				temp = f.read(1)
 				if len(temp) == 0:
 					eof = True
@@ -66,6 +75,4 @@ True :
 				response = None
 				core.gc.collect()
 				try :
-					print('Updating Library -> ' + str(x), end = '')
-					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/'+x+'.py')
-					if response.s
+					print('Updating Library -> '

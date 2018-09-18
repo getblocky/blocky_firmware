@@ -1,4 +1,11 @@
-_last_word():
+'w')
+			f.write('Your code use too much memory,Blocky have to kill it')
+			f.close()
+		except:
+			pass
+		machine.reset()
+					
+async def send_last_word():
 	if "last_word.py" in core.os.listdir():
 		while not core.wifi.wlan_sta.isconnected() or not core.flag.blynk:
 			await core.asyncio.sleep_ms(500)
@@ -45,7 +52,7 @@ async def main(online=False):
 			core.mainthread.call_soon(main(True))
 			core.cfn_btn.irq(trigger=0)
 		core.cfn_btn.irq(trigger=core.machine.Pin.IRQ_FALLING,handler = clean_up)
-		user_code = __import__('user_code')
+		core.user_code = __import__('user_code')
 		return
 		
 	core.wifi = __import__('Blocky/wifi')
@@ -54,9 +61,4 @@ async def main(online=False):
 	# There are some DeviceLog that cant be send
 	core.mainthread.create_task(send_last_word())
 	core.mainthread.create_task(run_user_code())
-	#Routine check of connection to server
-	while True :
-		await core.asyncio.sleep_ms(500)
-		# Recover from wifi jittering
-		if not core.wifi.wlan_sta.isconnected():
-			print('Oh Wow , 
+	#Routine check of connection to serv

@@ -1,4 +1,21 @@
+in] = VrPin(None, func)
+			def __call__(self):
+				return self.func()
+		return Decorator
 
+	def on_connect(self, func):
+		self._on_connect = func
+
+	def connect(self):
+		self._do_connect = True
+
+	def disconnect(self):
+		self._do_connect = False
+
+	async def run(self):
+		self._start_time = time.ticks_ms()
+		self._task_millis = self._start_time
+		self._hw_pins = {}
 		self._rx_data = b''
 		self._msg_id = 1
 		self._timeout = None
@@ -46,15 +63,4 @@
 					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
 					print('Blynk connection successful, authenticating...')
 					self._send(hdr + self._token, True)
-					data = self._recv(HDR_LEN, timeout=MAX_SOCK_TO)
-					if not data:
-						self._close('Blynk authentication timed out')
-						continue
-
-					msg_type, msg_id, status = struct.unpack(HDR_FMT, data)
-					if status != STA_SUCCESS or msg_id == 0:
-						self._close('Blynk authentication failed')
-						continue
-
-					self.state = AUTHENTICATED
-					self._send(self._format_msg(MSG_INTERNAL, 'ver
+					data = self._recv(HDR_LEN, 

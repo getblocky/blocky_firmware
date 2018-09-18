@@ -57,16 +57,25 @@ def failsafe(source):
 		
 		
 async def run_user_code(direct = False):
-	if direct == True :
-		user_code = __import__('user_code')
-		return 
-		
-	await core.asyn.Cancellable.cancel_all()
-	print('Run User_code')
 	try:
 		wdt_timer.deinit()
 	except :
 		pass
+	
+	await core.asyn.Cancellable.cancel_all()
+		
+	if direct == True :
+		try :
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			print("User's watchdog initialized")
+		except :
+			pass
+		
+		core.user_code = __import__('user_code')
+		return 
+	
+	print('Run User_code')
+	
 	
 	print('Checking library file')
 	
@@ -184,28 +193,27 @@ async def run_user_code(direct = False):
 			core.gc.collect()
 			
 			
-		else :
-			try :
-				#wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
-				print("User's watchdog initialized")
-			except :
-				pass
+		try :
+			#wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			print("User's watchdog initialized")
+		except :
+			pass
+		
+		try :
+			del core.sys.modules['user_code']
+		except :
+			pass
 			
-			try :
-				del core.sys.modules['user_code']
-			except :
-				pass
-				
-			print('Starting Usercode with ' , core.gc.mem_free())
-			try :
-				user_code = __import__('user_code')
-			except RuntimeError:
-				print('User RuntimeError , will run after connected to Blynk')
-				del core.sys.modules['user_code']
-				while core.wifi.wlan_sta.isconnected() == False or core.flag.blynk == False :
-					await core.asyncio.sleep_ms(500)
-				print('Start user code')
-				core.mainthread.create_task(run_user_code(True))
+		print('Starting Usercode with ' , core.gc.mem_free())
+		try :
+			core.user_code = __import__('user_code')
+		except RuntimeError:
+			print('User RuntimeError , will run after connected to Blynk')
+			del core.sys.modules['user_code']
+			while core.wifi.wlan_sta.isconnected() == False or core.flag.blynk == False :
+				await core.asyncio.sleep_ms(500)
+			print('Start user code')
+			core.mainthread.create_task(run_user_code(True))
 				
 				
 	except MemoryError:
@@ -271,7 +279,7 @@ async def main(online=False):
 			core.mainthread.call_soon(main(True))
 			core.cfn_btn.irq(trigger=0)
 		core.cfn_btn.irq(trigger=core.machine.Pin.IRQ_FALLING,handler = clean_up)
-		user_code = __import__('user_code')
+		core.user_code = __import__('user_code')
 		return
 		
 	core.wifi = __import__('Blocky/wifi')
@@ -313,11 +321,10 @@ def wrapper ():
 			import sys
 			sys.print_exception(err)
 			core.time.sleep_ms(1000)
-			
-
-
 
 core.blynk = None
 core.mainthread.create_task(main())
 core._thread.start_new_thread(wrapper,())
+
+# Disable 2 _thread will save 16K RAM
 

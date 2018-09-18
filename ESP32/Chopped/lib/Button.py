@@ -24,7 +24,8 @@ class Button:
 			return 
 		self.ButtonTaskList[function_name] = function
 		
-	
+	def is_pressed(self):
+		return True if self.button.value() else False
 	def _handler(self,source):
 		state = self.button.value()
 		now = core.Timer.runtime()

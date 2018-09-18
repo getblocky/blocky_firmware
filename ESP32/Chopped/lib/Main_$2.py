@@ -1,4 +1,6 @@
-tatus_code == 200 :
+ + str(x), end = '')
+					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/'+x+'.py')
+					if response.status_code == 200 :
 						f = open('Blocky/'+x+'.py','w')
 						f.write(response.content)
 						print('#',end = '')
@@ -29,28 +31,27 @@ tatus_code == 200 :
 			core.gc.collect()
 			
 			
-		else :
-			try :
-				#wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
-				print("User's watchdog initialized")
-			except :
-				pass
+		try :
+			#wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			print("User's watchdog initialized")
+		except :
+			pass
+		
+		try :
+			del core.sys.modules['user_code']
+		except :
+			pass
 			
-			try :
-				del core.sys.modules['user_code']
-			except :
-				pass
-				
-			print('Starting Usercode with ' , core.gc.mem_free())
-			try :
-				user_code = __import__('user_code')
-			except RuntimeError:
-				print('User RuntimeError , will run after connected to Blynk')
-				del core.sys.modules['user_code']
-				while core.wifi.wlan_sta.isconnected() == False or core.flag.blynk == False :
-					await core.asyncio.sleep_ms(500)
-				print('Start user code')
-				core.mainthread.create_task(run_user_code(True))
+		print('Starting Usercode with ' , core.gc.mem_free())
+		try :
+			core.user_code = __import__('user_code')
+		except RuntimeError:
+			print('User RuntimeError , will run after connected to Blynk')
+			del core.sys.modules['user_code']
+			while core.wifi.wlan_sta.isconnected() == False or core.flag.blynk == False :
+				await core.asyncio.sleep_ms(500)
+			print('Start user code')
+			core.mainthread.create_task(run_user_code(True))
 				
 				
 	except MemoryError:
@@ -62,11 +63,4 @@ tatus_code == 200 :
 			n[0] = (255,0,0);n.write();time.sleep_ms(50)
 			n[0] = (0,0,0);n.write();time.sleep_ms(50)
 		try :
-			f = open('last_word.py' , 'w')
-			f.write('Your code use too much memory,Blocky have to kill it')
-			f.close()
-		except:
-			pass
-		machine.reset()
-					
-async def send
+			f = open('last_word.py' , 

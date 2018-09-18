@@ -1,6 +1,14 @@
-http :
+_format_msg(MSG_TWEET, msg))
+
+	def email(self, to, subject, body):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
+
+	def virtual_write(self, pin, val,http=False):
+		if http :
 			try :
-				core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
+				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
+				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
 			except Exception as err:
 				print("VW using HTTP -> " , err)
 		else :
@@ -17,8 +25,7 @@ http :
 			else:
 				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
 	def log(self,message):
-		print('LOG')
-		pass
+		self.virtual_write(127,message,http=True)
 		
 	def sync_all(self):
 		if self.state == AUTHENTICATED:
@@ -51,21 +58,4 @@ http :
 		class Decorator():
 			def __init__(self, func):
 				self.func = func
-				blynk._vr_pins[pin] = VrPin(None, func)
-			def __call__(self):
-				return self.func()
-		return Decorator
-
-	def on_connect(self, func):
-		self._on_connect = func
-
-	def connect(self):
-		self._do_connect = True
-
-	def disconnect(self):
-		self._do_connect = False
-
-	async def run(self):
-		self._start_time = time.ticks_ms()
-		self._task_millis = self._start_time
-		self._hw_pins = {}
+				blynk._vr_pins[p

@@ -106,6 +106,7 @@ class Blynk:
 		self._task = None
 		self._task_period = 0
 		self._token = token
+		self.message = None
 		if isinstance (self._token, str):
 			self._token = token.encode('ascii')
 		self._server = server
@@ -125,7 +126,7 @@ class Blynk:
 	def _format_msg(self, msg_type, *args):
 		data = ('\0'.join(map(str, args))).encode('ascii')
 		return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
-
+		
 	async def _handle_hw(self, data):
 		try :
 			params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
@@ -144,14 +145,15 @@ class Blynk:
 						if core.ota_file == None :
 							core.ota_file = open('user_code.py','w')
 						if params[1] == "OTA":
-							self.virtual_write(127,"[OTA_READY]",http = True)
+							await core.asyn.Cancellable.cancel_all()
+							core.cleanup()
 							
-							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n")
+							self.virtual_write(127,"[OTA_READY]",http = True)
+							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
 						else :
 							print('PART' , params[1] ,len(params[0]) , end = '')
 							total_part = int(params[1].split('/')[1])
 							curr_part = int(params[1].split('/')[0])
-							
 							if total_part == curr_part :
 								core.ota_file.write(params[0])
 								core.ota_file.close()
@@ -162,17 +164,16 @@ class Blynk:
 							if curr_part < total_part:
 								core.ota_file.write(params[0])
 								self.virtual_write(127,"[OTA_READY]",http = True)
-								print(curr_part ,'/' , total_part)
-							
-						
 						
 					else :
 						print('Sorry , your code is lock , press config to unlock it')
-						
+						core.blynk.log("[ERROR] You have locked your code , to upload new code , you need to press CONFIG button onboard")
 					# Run cleanup task here
 					
 				elif (pin in self._vr_pins_write or pin in self._vr_pins_read) :
-						core.mainthread.create_task(core.asyn.Cancellable(self._vr_pins_read[pin])(params[0]))
+					self.message = params
+					print('Task Handling on pin ', pin , 'with' , params)
+					core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
 			# Handle Virtual Read operation
 			elif cmd == 'vr':
 				pin = int(params.pop(0))
@@ -274,10 +275,10 @@ class Blynk:
 			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
 
 	def virtual_write(self, pin, val,http=False):
-		
 		if http :
 			try :
-				core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
+				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
+				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
 			except Exception as err:
 				print("VW using HTTP -> " , err)
 		else :
@@ -294,8 +295,7 @@ class Blynk:
 			else:
 				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
 	def log(self,message):
-		print('LOG')
-		pass
+		self.virtual_write(127,message,http=True)
 		
 	def sync_all(self):
 		if self.state == AUTHENTICATED:

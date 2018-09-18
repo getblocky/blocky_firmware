@@ -57,16 +57,25 @@ def failsafe(source):
 		
 		
 async def run_user_code(direct = False):
-	if direct == True :
-		user_code = __import__('user_code')
-		return 
-		
-	await core.asyn.Cancellable.cancel_all()
-	print('Run User_code')
 	try:
 		wdt_timer.deinit()
 	except :
 		pass
+	
+	await core.asyn.Cancellable.cancel_all()
+		
+	if direct == True :
+		try :
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			print("User's watchdog initialized")
+		except :
+			pass
+		
+		core.user_code = __import__('user_code')
+		return 
+	
+	print('Run User_code')
+	
 	
 	print('Checking library file')
 	
@@ -74,13 +83,4 @@ async def run_user_code(direct = False):
 	# We can use readlines() or readline() right
 	# uPython user continuous memory region for readlines() -> MemoryError
 	# uPython readline() use different newline syntax !
-	# uPython's regex use recursive while max stack = 39
-	# Damn right =))
-	
-	list_library = []
-	try :
-		f = open('user_code.py')
-		eof = False
-		while eof == False :
-			line = ''
-			while 
+	# uPython's regex u

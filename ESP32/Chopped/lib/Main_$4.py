@@ -1,4 +1,9 @@
-wifi is disconnected , Connecting back')
+er
+	while True :
+		await core.asyncio.sleep_ms(500)
+		# Recover from wifi jittering
+		if not core.wifi.wlan_sta.isconnected():
+			print('Oh Wow , wifi is disconnected , Connecting back')
 			await core.wifi.connect(core.config['known_networks'])
 			print('Wifi is on , connecting to Blynk')
 			await core.asyncio.sleep_ms(500)
@@ -26,11 +31,10 @@ def wrapper ():
 			import sys
 			sys.print_exception(err)
 			core.time.sleep_ms(1000)
-			
-
-
 
 core.blynk = None
 core.mainthread.create_task(main())
 core._thread.start_new_thread(wrapper,())
+
+# Disable 2 _thread will save 16K RAM
 

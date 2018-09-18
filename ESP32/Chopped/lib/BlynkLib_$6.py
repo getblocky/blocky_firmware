@@ -1,4 +1,15 @@
-', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
+timeout=MAX_SOCK_TO)
+					if not data:
+						self._close('Blynk authentication timed out')
+						continue
+
+					msg_type, msg_id, status = struct.unpack(HDR_FMT, data)
+					if status != STA_SUCCESS or msg_id == 0:
+						self._close('Blynk authentication failed')
+						continue
+
+					self.state = AUTHENTICATED
+					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
 					print('Access granted, happy Blynking!')
 					if self._on_connect:
 						self._on_connect()
@@ -51,10 +62,3 @@
 					
 				
 				await core.asyncio.sleep_ms(1)
-				
-			if not self._do_connect or not core.flag.blynk:
-				self._close()
-				print('Blynk disconnection requested by the user')
-				break
-			
-			await core.asyncio.sleep_ms(1000)

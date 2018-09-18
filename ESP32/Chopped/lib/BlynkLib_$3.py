@@ -1,4 +1,13 @@
-meout)
+_msg_id = 1
+		return self._msg_id
+
+	def _settimeout(self, timeout):
+		if timeout != self._timeout:
+			self._timeout = timeout
+			self.conn.settimeout(timeout)
+
+	def _recv(self, length, timeout=0):
+		self._settimeout (timeout)
 		try:
 			self._rx_data += self.conn.recv(length)
 		except OSError as err:
@@ -67,12 +76,4 @@ meout)
 
 	def tweet(self, msg):
 		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_TWEET, msg))
-
-	def email(self, to, subject, body):
-		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
-
-	def virtual_write(self, pin, val,http=False):
-		
-		if 
+			self._send(self.

@@ -45,6 +45,7 @@ class Blynk:
 		self._task = None
 		self._task_period = 0
 		self._token = token
+		self.message = None
 		if isinstance (self._token, str):
 			self._token = token.encode('ascii')
 		self._server = server
@@ -64,7 +65,7 @@ class Blynk:
 	def _format_msg(self, msg_type, *args):
 		data = ('\0'.join(map(str, args))).encode('ascii')
 		return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
-
+		
 	async def _handle_hw(self, data):
 		try :
 			params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
@@ -76,5 +77,4 @@ class Blynk:
 				pin = int(params.pop(0))
 				if pin == 126 :
 					print('['+str(core.Timer.runtime())+'] OTA Message Received')
-					core.gc.collect()
-					ota
+					co

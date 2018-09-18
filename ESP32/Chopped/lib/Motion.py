@@ -1,3 +1,4 @@
+#version=1.0
 import sys
 core = sys.modules['Blocky.Core']
 
