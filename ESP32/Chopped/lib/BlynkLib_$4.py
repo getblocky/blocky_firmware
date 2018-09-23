@@ -10,8 +10,8 @@ f tweet(self, msg):
 		if http :
 			try :
 				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
-				#core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
-				core.urequests.put('http://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=str(val), headers={'Content-Type': 'application/json'})
+				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
+				#core.urequests.put('http://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=str(val), headers={'Content-Type': 'application/json'})
 
 			
 			except Exception as err:
