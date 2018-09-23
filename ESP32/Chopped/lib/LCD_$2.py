@@ -1,4 +1,4 @@
- through the command.
+e hal to pass through the command.
 		"""
 		self.backlight = False
 		self.hal_backlight_off()
@@ -69,4 +69,4 @@
 		It is expected that a derived HAL class will implement this
 		function.
 		"""
-		raise NotImpleme
+		rai

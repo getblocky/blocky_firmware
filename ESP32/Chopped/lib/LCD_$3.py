@@ -1,4 +1,4 @@
-ntedError
+se NotImplementedError
 
 	def hal_write_data(self, data):
 		"""Write data to the LCD.
@@ -49,5 +49,4 @@ ntedError
 		
 class LCD ():
 	def __init__(self , port , addr = 56 , line = 2 , column = 16):
-		self.p = port
-	
+		se

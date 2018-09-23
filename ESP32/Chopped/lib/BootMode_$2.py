@@ -1,7 +1,4 @@
-ks = []
-		raw = self.wlan_sta.scan()
-		for nw in raw:
-			networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
+
 		
 		content = core.json.dumps(networks)
 		print(len(networks) , 'networks detected')
@@ -18,8 +15,6 @@ ks = []
 		core.gc.collect()
 		if core.gc.mem_free() < 20000 :
 			core.machine.reset()
-		
-		
 		
 		server = None 
 		id = core.binascii.hexlify(core.machine.unique_id()).decode('ascii')
@@ -57,4 +52,8 @@ ks = []
 		
 		#-------------------------------------------------
 		
-		#----------------------
+		#-------------------------------------------------
+		self.wlan_sta.active(True)
+		self.wlan_ap.active(True)
+		
+		self.wlan_ap.config(essid = ap_name 

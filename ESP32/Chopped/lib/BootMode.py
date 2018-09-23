@@ -1,5 +1,4 @@
-#from Blocky.Indicator import indicator
-
+#version=1.0
 import  sys
 core = sys.modules['Blocky.Core']
 class BootMode :
@@ -52,10 +51,9 @@ class BootMode :
 		
 	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
 		print('Get check status request')
-		import Blocky.Global
-		if Blocky.Global.flag_ONLINE == True:
+		if core.flag.wifi == True:
 			content = 'OK'
-		elif Blocky.Global.flag_ONLINE == False:
+		elif core.flag.wifi == False:
 			content = 'Failed'
 		else:	
 			content = ''
@@ -69,4 +67,8 @@ class BootMode :
 		if self.wifi_status == 1:
 			print('Wait for rebooting')
 			time.sleep(5)
-			print('Reboo
+			print('Rebooting')
+			machine.reset()
+		"""
+
+	def _httpHandlerSaveConfig(self, httpCl

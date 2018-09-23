@@ -1,3 +1,4 @@
+#version=1.0
 import Blocky.Core as core
 from Blocky.Indicator import indicator
 
@@ -24,18 +25,19 @@ def failsafe(source):
 		if core.Timer.runtime() - core.blynk.last_call > 10000 :
 			print('Usercode is so bad')
 			import os , machine 
+			print('Removing')
 			try :
 				os.rename('user_code.py' , 'temp_code.py')
-				
 			except :
 				pass
-				
+			print('Lastword')
 			try :
 				f = open('last_word.py' , 'w')
-				f.write('Your code seem to block the mainthread,Blocky have to kill it')
+				f.write('Your code has been deleted because it use so many processing time')
 				f.close()
 			except:
 				pass
+			print('Reset')
 			core.machine.reset()
 	# Due to MemoryError or because reference has been deleted	
 	except : 
@@ -82,5 +84,4 @@ async def run_user_code(direct = False):
 	# Why am I doing this huh ?
 	# We can use readlines() or readline() right
 	# uPython user continuous memory region for readlines() -> MemoryError
-	# uPython readline() use different newline syntax !
-	# uPython's regex u
+	# uPy

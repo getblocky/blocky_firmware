@@ -34,6 +34,7 @@ re.gc.collect()
 					self.message = params
 					print('Task Handling on pin ', pin , 'with' , params)
 					core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
+					await core.asyncio.sleep_ms(50) #Asyncio will focus on the handling
 			# Handle Virtual Read operation
 			elif cmd == 'vr':
 				pin = int(params.pop(0))
@@ -47,7 +48,4 @@ re.gc.collect()
 			import sys
 			print('BlynkHandler ->')
 			sys.print_exception(err)
-	def _new_msg_id(self):
-		self._msg_id += 1
-		if (self._msg_id > 0xFFFF):
-			self.
+	def _new

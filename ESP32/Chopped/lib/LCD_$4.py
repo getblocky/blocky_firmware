@@ -1,4 +1,5 @@
-	self.pin = core.getPort(self.p)
+lf.p = port
+		self.pin = core.getPort(self.p)
 		self.line = line
 		self.column = column
 		self.addr = addr
@@ -24,6 +25,7 @@
 			pass
 	def display(self,line = 0 , left = '' , right = ''):
 		try :
+			self.lcd.backlight_on()
 			if line <= self.line :
 				self.lcd.move_to(0,line-1)
 				right = str(right)
@@ -49,3 +51,4 @@
 				self.lcd.backlight_off()
 		except Exception:
 			pass
+

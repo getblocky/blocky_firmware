@@ -1,4 +1,6 @@
-
+#version=1.0
+import sys
+core = sys.modules['Blocky.Core']
 
 """
 Main Timer Variable 
@@ -15,12 +17,9 @@ Timer Usage :;
 	
 """
 
-
+core.TimerInfo = [core.time.ticks_ms() , core.time.ticks_ms() , None , None]
 # Provide an non-ovf timer count 
 def runtime():
-	import Blocky.Core as core
-	core.TimerInfo = [ core.time.ticks_ms() , core.time.ticks_ms()  , None , None ]
-
 	now = core.time.ticks_ms()
 	if now < core.TimerInfo[0]:offset =  (1073741823 - core.TimerInfo[1] + now)
 	else :	offset =  (now - core.TimerInfo[0])
@@ -28,4 +27,29 @@ def runtime():
 	return core.TimerInfo[1]
 # This function should be call randomly every 10 minutes
 
+	
+def sync_ntp():
+	if core.wifi.wlan_sta.isconnected():
+		NTP_QUERY = bytearray(48)
+		NTP_QUERY[0] = 0x1b
+		addr = core.socket.getaddrinfo("pool.ntp.org", 123)[0][-1]
+		s = core.socket.socket(core.socket.AF_INET, core.socket.SOCK_DGRAM)
+		s.settimeout(1)
+		res = s.sendto(NTP_QUERY, addr)
+		msg = s.recv(48)
+		s.close()
+		val = core.struct.unpack("!I", msg[40:44])[0]
+		t = val - 3155673600
+		gmt = core.eeprom.get('GMT')
+		if gmt != None :
+			t += gmt * 3600
+		tm = core.time.localtime(t)
+		tm = tm[0:3] + (0,) + tm[3:6] + (0,)
+		core.machine.RTC().datetime(tm)
+		print('[NTP] Synced at {}'.format(core.time.localtime()))
+		
+def current_time(format=None):
+	if format==None:
+		return core.time.localtime()
+	
 	

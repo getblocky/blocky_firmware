@@ -1,4 +1,4 @@
-nit__(self, num_lines, num_columns)
+		#LcdApi.__init__(self, num_lines, num_columns)
 		self.num_lines = num_lines
 		if self.num_lines > 4:
 			self.num_lines = 4
@@ -71,4 +71,4 @@ nit__(self, num_lines, num_columns)
 		"""Turns the backlight off.
 
 		This isn't really an LCD command, but some modules have backlight
-		controls, so this allows the hal to pass
+		controls, so this allows th

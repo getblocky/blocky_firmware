@@ -2,6 +2,7 @@
 from machine import Pin
 from neopixel import NeoPixel
 from Blocky.Pin import getPin
+
 class RGB:
 	def __init__(self,port , num = 1):
 		self.p = getPin(port)
@@ -34,3 +35,5 @@ class RGB:
 				self.rgb[x] = temp[x]
 				
 			self.color( led,color)
+
+class 

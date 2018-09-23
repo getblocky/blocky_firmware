@@ -1,3 +1,4 @@
+#version=1.0
 import sys;core = sys.modules['Blocky.Core']
 
 """Implements a HD44780 character LCD connected via PCF8574 on I2C.
@@ -275,6 +276,7 @@ class LCD ():
 			pass
 	def display(self,line = 0 , left = '' , right = ''):
 		try :
+			self.lcd.backlight_on()
 			if line <= self.line :
 				self.lcd.move_to(0,line-1)
 				right = str(right)
@@ -300,3 +302,4 @@ class LCD ():
 				self.lcd.backlight_off()
 		except Exception:
 			pass
+

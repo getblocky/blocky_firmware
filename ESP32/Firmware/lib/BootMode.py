@@ -1,5 +1,4 @@
-#from Blocky.Indicator import indicator
-
+#version=1.0
 import  sys
 core = sys.modules['Blocky.Core']
 class BootMode :
@@ -52,10 +51,9 @@ class BootMode :
 		
 	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
 		print('Get check status request')
-		import Blocky.Global
-		if Blocky.Global.flag_ONLINE == True:
+		if core.flag.wifi == True:
 			content = 'OK'
-		elif Blocky.Global.flag_ONLINE == False:
+		elif core.flag.wifi == False:
 			content = 'Failed'
 		else:	
 			content = ''
@@ -82,13 +80,9 @@ class BootMode :
 		print('client->saveconfig: Trying to connect to ' + str(request_json) , end = '')
 		for x in range(130):
 			core.time.sleep_ms(100)
-			
 			if self.wlan_sta.isconnected():
-				# save config
-				
 				self.wifi_status = 1
 				print('Connected to ' , request_json['ssid'])
-				
 				config = {}
 				try :
 					config = core.json.loads(open('config.json').read())
@@ -110,20 +104,18 @@ class BootMode :
 						config['known_networks'].append({'ssid': request_json['ssid'], 'password': request_json['password']})
 						print('Add new network')
 				print('Devicename')
-				if len(request_json['device_name']):
+				if len(request_json['deviceName']):
 					config['device_name'] = request_json['deviceName']
 				if len(request_json['token']):
 					config['token'] = request_json['token']
 				
-				
-				
 				f = open('config.json', 'w')
 				f.write(core.json.dumps(config))
 				f.close()
-				core.flag.ONLINE = True
+				core.flag.wifi = True
 				break
 			else :
-				core.flag.ONLINE = False
+				core.flag.wifi = False
 				print('.' , end = '')
 	def is_ascii(self, s):
 		return all(ord(c) < 128 for c in s)
@@ -152,8 +144,6 @@ class BootMode :
 		core.gc.collect()
 		if core.gc.mem_free() < 20000 :
 			core.machine.reset()
-		
-		
 		
 		server = None 
 		id = core.binascii.hexlify(core.machine.unique_id()).decode('ascii')

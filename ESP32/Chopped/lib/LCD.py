@@ -1,3 +1,4 @@
+#version=1.0
 import sys;core = sys.modules['Blocky.Core']
 
 """Implements a HD44780 character LCD connected via PCF8574 on I2C.
@@ -53,4 +54,3 @@ class I2cLcd():
 		# Put LCD into 4 bit mode
 		self.hal_write_init_nibble(LCD_FUNCTION)
 		core.time.sleep_ms(1)
-		#LcdApi.__i

@@ -174,6 +174,7 @@ class Blynk:
 					self.message = params
 					print('Task Handling on pin ', pin , 'with' , params)
 					core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
+					await core.asyncio.sleep_ms(50) #Asyncio will focus on the handling
 			# Handle Virtual Read operation
 			elif cmd == 'vr':
 				pin = int(params.pop(0))
@@ -278,7 +279,10 @@ class Blynk:
 		if http :
 			try :
 				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
-				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
+				#core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
+				core.urequests.put('http://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=str(val), headers={'Content-Type': 'application/json'})
+
+			
 			except Exception as err:
 				print("VW using HTTP -> " , err)
 		else :
@@ -294,8 +298,8 @@ class Blynk:
 				self._send(self._format_msg(MSG_EVENT_LOG, event))
 			else:
 				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
-	def log(self,message):
-		self.virtual_write(127,message,http=True)
+	def log(self,message , http = False):
+		self.virtual_write(127,message,http=http)
 		
 	def sync_all(self):
 		if self.state == AUTHENTICATED:

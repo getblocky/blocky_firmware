@@ -1,4 +1,14 @@
-in] = VrPin(None, func)
+		blynk._vr_pins[pin] = VrPin(func, None)
+				#print(blynk, func, pin)
+			def __call__(self):
+				return self.func()
+		return Decorator
+
+	def VIRTUAL_WRITE(blynk, pin):
+		class Decorator():
+			def __init__(self, func):
+				self.func = func
+				blynk._vr_pins[pin] = VrPin(None, func)
 			def __call__(self):
 				return self.func()
 		return Decorator
@@ -57,10 +67,4 @@ in] = VrPin(None, func)
 					except Exception as err:
 						core.sys.print_exception(err)
 						self._close('connection with the Blynk servers failed')
-						continue
-
-					self.state = AUTHENTICATING
-					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
-					print('Blynk connection successful, authenticating...')
-					self._send(hdr + self._token, True)
-					data = self._recv(HDR_LEN, 
+				

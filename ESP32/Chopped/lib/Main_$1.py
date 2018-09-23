@@ -1,4 +1,5 @@
-se recursive while max stack = 39
+thon readline() use different newline syntax !
+	# uPython's regex use recursive while max stack = 39
 	# Damn right =))
 	
 	list_library = []
@@ -69,10 +70,7 @@ se recursive while max stack = 39
 			while not core.wifi.wlan_sta.isconnected():
 				await core.asyncio.sleep_ms(500)
 			
+			
 			print('Wifi Connected , Start downloading library')
-			import urequests
 			for x in list_library:
-				response = None
-				core.gc.collect()
-				try :
-					print('Updating Library -> '
+				core.download(x + '.py' ,'Bloc

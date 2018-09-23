@@ -1,5 +1,4 @@
-
-			if 'upgrade' in self._headers.get('Connection', '').lower() :
+		if 'upgrade' in self._headers.get('Connection', '').lower() :
 				return self._headers.get('Upgrade', '').lower()
 			return None
 		
@@ -69,4 +68,4 @@
 		#	pass		
 		
 		def WriteSwitchProto(self, upgrade, headers=None) :
-			self._writeFirstLine(10
+			self._writeFirstLine(101)

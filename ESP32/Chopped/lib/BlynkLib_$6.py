@@ -1,4 +1,10 @@
-timeout=MAX_SOCK_TO)
+		continue
+
+					self.state = AUTHENTICATING
+					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
+					print('Blynk connection successful, authenticating...')
+					self._send(hdr + self._token, True)
+					data = self._recv(HDR_LEN, timeout=MAX_SOCK_TO)
 					if not data:
 						self._close('Blynk authentication timed out')
 						continue
@@ -51,14 +57,4 @@ timeout=MAX_SOCK_TO)
 						break
 				else:
 					await core.asyncio.sleep_ms(1)
-					#self._start_time = sleep_from_until(self._start_time, IDLE_TIME_MS)
-				if not self._server_alive():
-					self._close('Blynk server is offline')
-					print('BlynkServer->DEAD')
-					core.flag.blynk = False
-					break
-				else :
-					core.flag.blynk = True
-					
-				
-				await core.asyncio.sleep_ms(1)
+					#self._start_time = sleep_from_until(self._

@@ -18,7 +18,7 @@
 			wlan_ap = core.network.WLAN(core.network.AP_IF)
 			wlan_ap.active(True)
 			print('START AP')
-			while core.flag.ONLINE == False :
+			while core.flag.wifi == False :
 				await core.asyncio.sleep_ms(200)
 				if wlan_ap.isconnected():
 					try :
@@ -68,4 +68,4 @@
 	def SetNotFoundPageUrl(self, url=None) :
 		self._notFoundUrl = url
 
-	def Get
+	def GetMi

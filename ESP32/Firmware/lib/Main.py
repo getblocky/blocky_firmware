@@ -1,3 +1,4 @@
+#version=1.0
 import Blocky.Core as core
 from Blocky.Indicator import indicator
 
@@ -24,18 +25,19 @@ def failsafe(source):
 		if core.Timer.runtime() - core.blynk.last_call > 10000 :
 			print('Usercode is so bad')
 			import os , machine 
+			print('Removing')
 			try :
 				os.rename('user_code.py' , 'temp_code.py')
-				
 			except :
 				pass
-				
+			print('Lastword')
 			try :
 				f = open('last_word.py' , 'w')
-				f.write('Your code seem to block the mainthread,Blocky have to kill it')
+				f.write('Your code has been deleted because it use so many processing time')
 				f.close()
 			except:
 				pass
+			print('Reset')
 			core.machine.reset()
 	# Due to MemoryError or because reference has been deleted	
 	except : 
@@ -154,47 +156,14 @@ async def run_user_code(direct = False):
 			while not core.wifi.wlan_sta.isconnected():
 				await core.asyncio.sleep_ms(500)
 			
-			print('Wifi Connected , Start downloading library')
-			import urequests
-			for x in list_library:
-				response = None
-				core.gc.collect()
-				try :
-					print('Updating Library -> ' + str(x), end = '')
-					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/'+x+'.py')
-					if response.status_code == 200 :
-						f = open('Blocky/'+x+'.py','w')
-						f.write(response.content)
-						print('#',end = '')
-						piece = 0
-						while True :
-							piece += 1
-							response = None
-							core.gc.collect()
-							try :
-								response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/'+x + '_$' + str(piece) +'.py')
-								if response.status_code == 200 :
-									f.write(response.content)
-									print('#' , end = '')
-								else :
-									raise Exception
-							except Exception :
-								print('Pieces = ' , piece)
-								f.close()
-								break 
-					else :
-						print('Library ' , x , 'not found on server')
-				except Exception as err:
-					import sys
-					sys.print_exception(err)
-					print('Failed')
 			
-			del response
-			core.gc.collect()
+			print('Wifi Connected , Start downloading library')
+			for x in list_library:
+				core.download(x + '.py' ,'Blocky/{}.py'.format(x))
 			
 			
 		try :
-			#wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
 			print("User's watchdog initialized")
 		except :
 			pass
@@ -234,10 +203,18 @@ async def run_user_code(direct = False):
 					
 async def send_last_word():
 	if "last_word.py" in core.os.listdir():
-		while not core.wifi.wlan_sta.isconnected() or not core.flag.blynk:
+		while not core.flag.wifi :
 			await core.asyncio.sleep_ms(500)
-		core.blynk.virtual_write(127,open('last_word.py').read())
-		core.os.remove('last_word.py')
+		try :
+			print("Last word = " , open('last_word.py').read())
+			core.blynk.log(127,open('last_word.py').read(),http=True)
+		except :
+			pass
+		try :
+			print('removed last word')
+			core.os.remove('last_word.py')
+		except :
+			print('cant remoce')
 					
 async def main(online=False):
 	if not core.cfn_btn.value():

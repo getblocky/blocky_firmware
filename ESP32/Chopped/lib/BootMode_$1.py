@@ -1,8 +1,4 @@
-ting')
-			machine.reset()
-		"""
-
-	def _httpHandlerSaveConfig(self, httpClient, httpResponse):
+ient, httpResponse):
 		request_json  = ''
 		request_json = core.json.loads(httpClient.ReadRequestContent().decode('ascii'))
 		self.wifi_status = 0
@@ -11,13 +7,9 @@ ting')
 		print('client->saveconfig: Trying to connect to ' + str(request_json) , end = '')
 		for x in range(130):
 			core.time.sleep_ms(100)
-			
 			if self.wlan_sta.isconnected():
-				# save config
-				
 				self.wifi_status = 1
 				print('Connected to ' , request_json['ssid'])
-				
 				config = {}
 				try :
 					config = core.json.loads(open('config.json').read())
@@ -39,20 +31,18 @@ ting')
 						config['known_networks'].append({'ssid': request_json['ssid'], 'password': request_json['password']})
 						print('Add new network')
 				print('Devicename')
-				if len(request_json['device_name']):
+				if len(request_json['deviceName']):
 					config['device_name'] = request_json['deviceName']
 				if len(request_json['token']):
 					config['token'] = request_json['token']
 				
-				
-				
 				f = open('config.json', 'w')
 				f.write(core.json.dumps(config))
 				f.close()
-				core.flag.ONLINE = True
+				core.flag.wifi = True
 				break
 			else :
-				core.flag.ONLINE = False
+				core.flag.wifi = False
 				print('.' , end = '')
 	def is_ascii(self, s):
 		return all(ord(c) < 128 for c in s)
@@ -61,4 +51,7 @@ ting')
 		print('scanap->' , end = '')
 		self.wlan_sta.active(True)
 		
-		networ
+		networks = []
+		raw = self.wlan_sta.scan()
+		for nw in raw:
+			networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})

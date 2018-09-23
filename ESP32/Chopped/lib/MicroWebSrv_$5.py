@@ -1,4 +1,4 @@
-1)
+
 			self._writeHeader("Connection", "Upgrade")
 			self._writeHeader("Upgrade",	upgrade)
 			if isinstance(headers, dict) :
@@ -58,4 +58,4 @@
 											'message' : responseCode[1]
 									   } )
 		
-		def WriteResponseJSONError(self
+		def WriteResponseJSONError(self, 

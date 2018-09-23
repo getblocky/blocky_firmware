@@ -1,3 +1,4 @@
+#version=1.0
 import sys
 
 core = sys.modules['Blocky.Core']
@@ -33,5 +34,6 @@ async def connect(ap=None):
 					break
 			if wlan_sta.isconnected():
 				core.flag.wifi = True
+				core.Timer.sync_ntp()
 				break
 			await core.asyncio.sleep_ms(10000)

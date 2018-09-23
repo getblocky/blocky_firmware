@@ -1,4 +1,4 @@
-	 and self._microWebSrv.AcceptWebSocketCallback :
+and self._microWebSrv.AcceptWebSocketCallback :
 								MicroWebSocket( socket		 = self._socket,
 												httpClient	 = self,
 												httpResponse   = response,
@@ -57,3 +57,4 @@
 					return False
 		
 		def _getConnUpgrade(self) :
+	

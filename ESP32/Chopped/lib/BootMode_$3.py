@@ -1,8 +1,4 @@
----------------------------
-		self.wlan_sta.active(True)
-		self.wlan_ap.active(True)
-		
-		self.wlan_ap.config(essid = ap_name , password = ap_password	)
+, password = ap_password	)
 
 		routeHandlers = [
 			("/", "GET", self._httpHandlerIndexGet),
