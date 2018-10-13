@@ -1,10 +1,4 @@
-_msg_id(self):
-		self._msg_id += 1
-		if (self._msg_id > 0xFFFF):
-			self._msg_id = 1
-		return self._msg_id
-
-	def _settimeout(self, timeout):
+t(self, timeout):
 		if timeout != self._timeout:
 			self._timeout = timeout
 			self.conn.settimeout(timeout)
@@ -77,4 +71,8 @@ _msg_id(self):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_NOTIFY, msg))
 
-	de
+	def tweet(self, msg):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_TWEET, msg))
+
+	def email(self, to,

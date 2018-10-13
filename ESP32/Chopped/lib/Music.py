@@ -7,8 +7,7 @@ class Music :
 	def __init__ ( self , port ):
 		self.port = port
 		self.p = core.getPort(port)
-		if (pin[0]==None or pin[1] == None):
-			core.mainthread.call_soon(core.network.log("Your Music Module can't be used on  "+self.port)
+		if (self.p[0]==None or self.p[1] == None):
 			return
 		self.bus = None
 	
@@ -74,4 +73,6 @@ class Music :
 			return self._readRegister(0x43)
 		else :
 			try :
-		
+				volume = max(0,min(30,int(volume)))
+				self.sendStack(0x06 , 0x00 , volume)
+			except :

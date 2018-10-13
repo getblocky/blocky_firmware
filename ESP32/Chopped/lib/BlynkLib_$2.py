@@ -7,8 +7,6 @@ re.gc.collect()
 						if params[1] == "OTA":
 							await core.asyn.Cancellable.cancel_all()
 							core.cleanup()
-							
-							self.virtual_write(127,"[OTA_READY]",http = True)
 							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
 						else :
 							print('PART' , params[1] ,len(params[0]) , end = '')
@@ -18,12 +16,11 @@ re.gc.collect()
 								core.ota_file.write(params[0])
 								core.ota_file.close()
 								core.ota_file = None
-								self.virtual_write(127,"[OTA_DONE]",http = True)
+								self.virtual_write(127,'[OTA_DONE]',http = True)
 								print('User code saved')
 								core.mainthread.call_soon(self.ota())
 							if curr_part < total_part:
 								core.ota_file.write(params[0])
-								self.virtual_write(127,"[OTA_READY]",http = True)
 						
 					else :
 						print('Sorry , your code is lock , press config to unlock it')
@@ -48,4 +45,10 @@ re.gc.collect()
 			import sys
 			print('BlynkHandler ->')
 			sys.print_exception(err)
-	def _new
+	def _new_msg_id(self):
+		self._msg_id += 1
+		if (self._msg_id > 0xFFFF):
+			self._msg_id = 1
+		return self._msg_id
+
+	def _settimeou

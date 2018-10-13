@@ -1,3 +1,5 @@
+sure that it keep running
+def wrapper ():
 	while True :
 		try :
 			core.mainthread.run_forever()

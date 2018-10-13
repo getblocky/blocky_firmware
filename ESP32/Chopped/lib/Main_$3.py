@@ -1,4 +1,4 @@
-close()
+)
 			
 	try :
 		core.config = core.json.loads(open('config.json').read())
@@ -8,6 +8,7 @@ close()
 		import sys
 		sys.print_exception(err)
 		print('Config->Error , Start Setup mode')
+		core.BootMode = __import__('Blocky/BootMode')
 		bootmode = core.BootMode.BootMode()
 		print('mainthread-> Booting')
 		await bootmode.Start() 
@@ -55,5 +56,4 @@ close()
 			
 		
 #	To avoid random crash due to random error 
-# 	This wrapper make sure that it keep running
-def wrapper ():
+# 	This wrapper make 

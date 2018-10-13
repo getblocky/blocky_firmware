@@ -2,7 +2,7 @@
 import sys
 
 core = sys.modules['Blocky.Core']
-
+wifi_list = None
 connected = False
 
 wlan_sta  = core.network.WLAN(core.network.STA_IF)
@@ -14,10 +14,12 @@ async def connect(ap=None):
 			await core.asyncio.sleep_ms(100)
 			
 	else :
+		
 		while not wlan_sta.isconnected():
 			
 			l = []
-			for x in wlan_sta.scan():
+			core.wifi_list = wlan_sta.scan()
+			for x in core.wifi_list:
 				l.append(x[0].decode('utf-8'))
 			print(l , sep = '\r\n')
 			for preference in [p for p in core.config.get('known_networks') if p['ssid'] in l]:

@@ -1,32 +1,27 @@
 #version=1.0
-import Blocky.uasyncio as asyncio
-from Blocky.asyn import Cancellable , cancellable
-from Blocky.Pin import getPin
-from machine import ADC , Pin 
-from time import ticks_ms
+import sys
+core = sys.modules['Blocky.Core']
 
 class Sound:
 	def __init__(self,port,limit = 500, sensitive = 3):
-		self.p = getPin(port)
+		self.p = core.getPort(port)
 		if self.p[2] == None :
 			return 
 		
-		self.adc = ADC(Pin(self.p[2]))
-		self.adc.atten(ADC.ATTN_11DB)
+		self.adc = core.machine.ADC(core.machine.Pin(self.p[2]))
+		self.adc.atten(core.machine.ADC.ATTN_11DB)
 		self.count = 0
 		self.limit = limit
 		self.his = [0,0,0]
 		self.curr = 0
-		self.last = ticks_ms()
+		self.last = core.time.ticks_ms()
 		self.cb = []
 		self.callback = [None,None]
-		loop = asyncio.get_event_loop()
-		#loop.call_soon(self.handler())
-		loop.create_task(Cancellable(self.handler)())
-	@cancellable
+		core.mainthread.create_task(core.asyn.Cancellable(self.handler)())
+	@core.asyn.cancellable
 	async def handler(self):
 		while True :
-			await asyncio.sleep_ms(10)
+			await core.asyncio.sleep_ms(10)
 			self.curr = self.adc.read()
 			self.his.pop(0)
 			self.his.append(self.curr)
@@ -40,16 +35,14 @@ class Sound:
 					if x[0] == 'clap' and x[1] == self.count:
 						try :
 							if x[3] == 'g':
-								loop = asyncio.get_event_loop()
-								loop.create_task(Cancellable(x[2])())
+								core.mainthread.create_task(core.asyn.Cancellable(x[2])())
 							if x[3] == 'f':
 								x[2]()
 						except Exception as err:
 							print('sound-event->',err)
 				if self.callback[0] != None :
 					if self.callback[1] == 'g':
-						loop = asyncio.get_event_loop()
-						loop.create_task(Cancellable(self.callback[0])(self.count))
+						core.mainthread.create_task(core.mainthread.Cancellable(self.callback[0])(self.count))
 					if self.callback[1] == 'f':
 						self.callback[0](self.count)
 						
@@ -63,3 +56,4 @@ class Sound:
 		else :
 			self.cb.append(['clap' ,time , function,'g' if str(function).find('generator') >0 else 'f'])
 		
+

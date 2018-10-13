@@ -1,8 +1,4 @@
-f tweet(self, msg):
-		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_TWEET, msg))
-
-	def email(self, to, subject, body):
+ subject, body):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
 
@@ -10,10 +6,13 @@ f tweet(self, msg):
 		if http :
 			try :
 				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
-				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
-				#core.urequests.put('http://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=str(val), headers={'Content-Type': 'application/json'})
-
-			
+				#core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
+				if not isinstance(val , list):
+					val = str([val]).replace("'", '"')
+				else :
+					val = str(val).replace("'" , '"')
+				print('[VW-HTTP]' , val)
+				core.urequests.put('https://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=val, headers={'Content-Type': 'application/json'})
 			except Exception as err:
 				print("VW using HTTP -> " , err)
 		else :
@@ -52,5 +51,4 @@ f tweet(self, msg):
 	def VIRTUAL_READ(blynk, pin):
 		class Decorator():
 			def __init__(self, func):
-				self.func = func
-		
+	

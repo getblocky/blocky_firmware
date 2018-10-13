@@ -1,4 +1,5 @@
-		blynk._vr_pins[pin] = VrPin(func, None)
+			self.func = func
+				blynk._vr_pins[pin] = VrPin(func, None)
 				#print(blynk, func, pin)
 			def __call__(self):
 				return self.func()
@@ -66,5 +67,4 @@
 						print('Connected')
 					except Exception as err:
 						core.sys.print_exception(err)
-						self._close('connection with the Blynk servers failed')
-				
+						self._close('connection with the Blynk

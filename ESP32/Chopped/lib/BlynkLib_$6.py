@@ -1,4 +1,5 @@
-		continue
+ servers failed')
+						continue
 
 					self.state = AUTHENTICATING
 					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
@@ -17,8 +18,10 @@
 					self.state = AUTHENTICATED
 					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
 					print('Access granted, happy Blynking!')
-					if self._on_connect:
-						self._on_connect()
+					print("[BLYNK] Sending system information")
+					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
+					#self.virtual_write(128 ,  {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
+					core.wifi.wifi_list  = None
 				else:
 					self._start_time = sleep_from_until(self._start_time, TASK_PERIOD_RES)
 				
@@ -44,17 +47,4 @@
 						if msg_id == self._last_hb_id:
 							self._last_hb_id = 0
 					elif msg_type == MSG_PING:
-						self._send(struct.pack(HDR_FMT, MSG_RSP, msg_id, STA_SUCCESS), True)
-					elif msg_type == MSG_HW or msg_type == MSG_BRIDGE:
-						data = self._recv(msg_len, MIN_SOCK_TO)
-						if data:
-							await self._handle_hw(data)
-					elif msg_type == MSG_INTERNAL: # TODO: other message types?
-						print('Internal')
-						break
-					else:
-						self._close('unknown message type %d' % msg_type)
-						break
-				else:
-					await core.asyncio.sleep_ms(1)
-					#self._start_time = sleep_from_until(self._
+						self._send(struct.pack(HDR_FMT, MSG_RSP,

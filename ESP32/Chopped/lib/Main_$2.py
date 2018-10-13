@@ -2,7 +2,7 @@ ky/{}.py'.format(x))
 			
 			
 		try :
-			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=30000,callback = failsafe)
 			print("User's watchdog initialized")
 		except :
 			pass
@@ -56,10 +56,10 @@ async def send_last_word():
 			print('cant remoce')
 					
 async def main(online=False):
-	if not core.cfn_btn.value():
+	if  core.cfn_btn.value():
 		time = core.time.ticks_ms()
 		print('Configure:',end = '')
-		while not core.cfn_btn.value():
+		while  core.cfn_btn.value():
 			print('#' , end = '')
 			core.time.sleep_ms(500)
 		time = core.time.ticks_ms() - time
@@ -70,4 +70,4 @@ async def main(online=False):
 			await bootmode.Start()
 		if time >= 5 and time < 10 :
 			f = open('user_code.py','w')
-			f.
+			f.close(

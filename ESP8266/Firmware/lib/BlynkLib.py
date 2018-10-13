@@ -147,6 +147,8 @@ class Blynk:
 						if params[1] == "OTA":
 							await core.asyn.Cancellable.cancel_all()
 							core.cleanup()
+							
+							self.virtual_write(127,"[OTA_READY]",http = True)
 							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
 						else :
 							print('PART' , params[1] ,len(params[0]) , end = '')
@@ -156,11 +158,12 @@ class Blynk:
 								core.ota_file.write(params[0])
 								core.ota_file.close()
 								core.ota_file = None
-								self.virtual_write(127,'[OTA_DONE]',http = True)
+								self.virtual_write(127,"[OTA_DONE]",http = True)
 								print('User code saved')
 								core.mainthread.call_soon(self.ota())
 							if curr_part < total_part:
 								core.ota_file.write(params[0])
+								self.virtual_write(127,"[OTA_READY]",http = True)
 						
 					else :
 						print('Sorry , your code is lock , press config to unlock it')
@@ -276,13 +279,10 @@ class Blynk:
 		if http :
 			try :
 				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
-				#core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
-				if not isinstance(val , list):
-					val = str([val]).replace("'", '"')
-				else :
-					val = str(val).replace("'" , '"')
-				print('[VW-HTTP]' , val)
-				core.urequests.put('https://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=val, headers={'Content-Type': 'application/json'})
+				core.urequests.get('http://blynk.getblocky.com/{}/update/V{}?value={}'.format(self._token.decode(),str(pin),str(val)))
+				#core.urequests.put('http://blynk.getblocky.com/{}/update/V{}'.format(self._token.decode(),str(pin)), data=str(val), headers={'Content-Type': 'application/json'})
+
+			
 			except Exception as err:
 				print("VW using HTTP -> " , err)
 		else :
@@ -410,10 +410,8 @@ class Blynk:
 					self.state = AUTHENTICATED
 					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
 					print('Access granted, happy Blynking!')
-					print("[BLYNK] Sending system information")
-					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
-					#self.virtual_write(128 ,  {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
-					core.wifi.wifi_list  = None
+					if self._on_connect:
+						self._on_connect()
 				else:
 					self._start_time = sleep_from_until(self._start_time, TASK_PERIOD_RES)
 				

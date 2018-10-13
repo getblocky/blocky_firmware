@@ -1,6 +1,4 @@
-		volume = max(0,min(30,int(volume)))
-				self.sendStack(0x06 , 0x00 , volume)
-			except :
+
 				return 
 	
 	def loop ( self , song):
