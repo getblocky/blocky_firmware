@@ -13,20 +13,27 @@ class Motion :
 		self.whennotdetect = None
 		self.prev = self.motion.value()
 		core.mainthread.create_task(core.asyn.Cancellable(self._handler)())
-		
+	
 	@core.asyn.cancellable
 	async def _handler(self):
 		while True :
 			if self.motion.value() != self.prev :
+				print('[MOTION] {}'.format(self.motion.value()))
 				if self.motion.value():
 					if self.whendetect :
-						await core.asyn.Cancellable(self.whendetect)()
-				else :
+						if core.flag.duplicate==True :
+							core.mainthread.create_task(core.asyn.Cancellable(self.whendetect)())
+						else :
+							await core.call_once('user_motion_{}'.format(1) , self.whendetect)
+				else:
 					if self.whennotdetect :
-						await core.asyn.Cancellable(self.whennotdetect)()
+						if core.flag.duplicate==True :
+							core.mainthread.create_task(core.asyn.Cancellable(self.whennotdetect)())
+						else :
+							await core.call_once('user_motion_{}'.format(0) , self.whennotdetect)
 				self.prev = not self.prev
 				
-			await core.asyncio.sleep_ms(300)
+			await core.asyncio.sleep_ms(300)  #Update rate
 						
 	def event(self,type,function):
 		if type == 'detect' :

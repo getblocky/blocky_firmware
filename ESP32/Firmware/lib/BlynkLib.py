@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
+print('[BLYNK] Loading ...')
 
 import socket
 import struct
@@ -42,7 +42,7 @@ except ImportError:
 HDR_LEN = const(5)
 HDR_FMT = "!BHH"
 
-MAX_MSG_PER_SEC = const(20)
+MAX_MSG_PER_SEC = const(1000)
 
 MSG_RSP = const(0)
 MSG_LOGIN = const(2)
@@ -126,7 +126,7 @@ class Blynk:
 	def _format_msg(self, msg_type, *args):
 		data = ('\0'.join(map(str, args))).encode('ascii')
 		return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
-		
+	
 	async def _handle_hw(self, data):
 		try :
 			params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
@@ -143,10 +143,11 @@ class Blynk:
 					
 					if (ota_lock == True and core.cfn_btn.value() == 0) or ota_lock == False or ota_lock == None :
 						if core.ota_file == None :
-							core.ota_file = open('user_code.py','w')
+							core.ota_file = open('temp_code.py','w')
 						if params[1] == "OTA":
 							await core.asyn.Cancellable.cancel_all()
-							core.cleanup()
+							core.indicator.animate('ota-starting')
+							await core.cleanup()
 							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
 						else :
 							print('PART' , params[1] ,len(params[0]) , end = '')
@@ -156,11 +157,24 @@ class Blynk:
 								core.ota_file.write(params[0])
 								core.ota_file.close()
 								core.ota_file = None
+								core.os.rename('temp_code.py','user_code.py')
+								print('^^~')
 								self.virtual_write(127,'[OTA_DONE]',http = True)
 								print('User code saved')
+								core.indicator.animate('ota-success')
+								for x in range(5):
+									core.indicator.rgb.fill((0,x*8,0))
+									core.indicator.rgb.write()
+									await core.asyncio.sleep_ms(10)
+								for x in range(5,-1,-1):
+									core.indicator.rgb.fill((0,x*8,0))
+									core.indicator.rgb.write()
+									await core.asyncio.sleep_ms(10)
 								core.mainthread.call_soon(self.ota())
+								
 							if curr_part < total_part:
 								core.ota_file.write(params[0])
+								print('[PROBE] ' , params[0][0:min(10,len(params[0]))])
 						
 					else :
 						print('Sorry , your code is lock , press config to unlock it')
@@ -169,8 +183,20 @@ class Blynk:
 					
 				elif (pin in self._vr_pins_write or pin in self._vr_pins_read) :
 					self.message = params
-					print('Task Handling on pin ', pin , 'with' , params)
-					core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
+					for x in range(len(self.message)):
+						try :
+							self.message[x] = int(self.message[x])
+						except :
+							pass
+					if len(self.message) == 1 :
+						self.message = self.message[0]
+						
+					print("[Blynk] V{} | {} {}".format(pin,self.message,type(self.message) ) )
+					if core.flag.duplicate == False :
+						await core.call_once('user_blynk_{}'.format(pin) , self._vr_pins_write[pin])
+					else :
+						core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
+						
 					await core.asyncio.sleep_ms(50) #Asyncio will focus on the handling
 			# Handle Virtual Read operation
 			elif cmd == 'vr':
@@ -272,7 +298,7 @@ class Blynk:
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
 
-	def virtual_write(self, pin, val,http=False):
+	def virtual_write(self, pin, val , device = None,http=False):
 		if http :
 			try :
 				#core.urequests.get('http://blynk.getblocky.com/' + self._token.decode() + '/update/V' + str(pin) + '?value=' + str(val))
@@ -287,7 +313,11 @@ class Blynk:
 				print("VW using HTTP -> " , err)
 		else :
 			if self.state == AUTHENTICATED:
-				self._send(self._format_msg(MSG_HW, 'vw', pin, val))
+				if device == None :
+					self._send(self._format_msg(MSG_HW, 'vw', pin, val))
+				else :
+					self._send(self._format_msg(MSG_BRIDGE ,100, 'i' , device)) # Set channel V100 of this node to point to that device
+					self._send(self._format_msg(MSG_BRIDGE, 100,'vw',  pin , val))
 	def set_property(self, pin, prop, val):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
@@ -345,7 +375,8 @@ class Blynk:
 
 	def disconnect(self):
 		self._do_connect = False
-
+	def sending ( self , to , data ) :
+		self._send(self._format_msg(MSG_HW, 'vw', pin, val))
 	async def run(self):
 		self._start_time = time.ticks_ms()
 		self._task_millis = self._start_time
@@ -365,7 +396,9 @@ class Blynk:
 				self.last_call = core.Timer.runtime()
 				if self._do_connect:
 					await core.asyncio.sleep_ms(100) # Delay in every retry
+					core.gc.collect() 
 					try:
+						core.indicator.animate('blynk-connecting')
 						self.state = CONNECTING
 						if self._ssl:
 							import ssl
@@ -392,7 +425,7 @@ class Blynk:
 						core.sys.print_exception(err)
 						self._close('connection with the Blynk servers failed')
 						continue
-
+					core.indicator.animate('blynk-authenticating')
 					self.state = AUTHENTICATING
 					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
 					print('Blynk connection successful, authenticating...')
@@ -400,17 +433,27 @@ class Blynk:
 					data = self._recv(HDR_LEN, timeout=MAX_SOCK_TO)
 					if not data:
 						self._close('Blynk authentication timed out')
+						core.indicator.animate('blynk-failed')
 						continue
 
 					msg_type, msg_id, status = struct.unpack(HDR_FMT, data)
 					if status != STA_SUCCESS or msg_id == 0:
 						self._close('Blynk authentication failed')
+						core.indicator.animate('blynk-failed')
 						continue
-
+					core.indicator.animate('blynk-success')
 					self.state = AUTHENTICATED
 					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
-					print('Access granted, happy Blynking!')
-					print("[BLYNK] Sending system information")
+					print("[BLYNK] Happy Blynking ! ")
+					for x in range(5):
+						core.indicator.rgb.fill((0,x*8,0))
+						core.indicator.rgb.write()
+						await core.asyncio.sleep_ms(10)
+					for x in range(5,-1,-1):
+						core.indicator.rgb.fill((0,x*8,0))
+						core.indicator.rgb.write()
+						await core.asyncio.sleep_ms(10)
+					core.flag.blynk = True
 					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					#self.virtual_write(128 ,  {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					core.wifi.wifi_list  = None
@@ -446,10 +489,10 @@ class Blynk:
 							await self._handle_hw(data)
 					elif msg_type == MSG_INTERNAL: # TODO: other message types?
 						print('Internal')
-						break
+						continue
 					else:
 						self._close('unknown message type %d' % msg_type)
-						break
+						continue
 				else:
 					await core.asyncio.sleep_ms(1)
 					#self._start_time = sleep_from_until(self._start_time, IDLE_TIME_MS)

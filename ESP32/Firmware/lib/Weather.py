@@ -23,7 +23,6 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.temperature()
 	def humidity(self):
@@ -32,7 +31,6 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.humidity()
 	"""

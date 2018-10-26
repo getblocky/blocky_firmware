@@ -1,3 +1,4 @@
+
 #version=1.0
 import sys
 core=sys.modules['Blocky.Core']
@@ -10,21 +11,12 @@ class Relay :
 		self.switch.value(0)
 		
 	def turn(self , state):
-		val = 0
-		if isinstance(state,list): # Blynk message is a list
-			state = state[0]
-		elif isinstance(state,str): # String based support
-			state = state.lower()
-			if state == "on":
-				val = 1
-			elif state == "flip":
-				val = not self.switch.value()
-		elif isinstance(state,int):
-			if state > 0:
-				val = 1
-		
-		self.switch.value(val)
-		
-	def state(self):
-		return 'on' if self.switch.value() else 'off'
+		if state == "flip" :
+			self.switch.value(not self.switch.value())
+		else :
+			try :
+
+				self.switch.value( state )
+			except :
+				pass
 

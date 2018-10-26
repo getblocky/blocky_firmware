@@ -1,38 +1,42 @@
 #version=1.0
 #from blocky_utility import get_free_UART TODO
-import sys
-core = sys.modules['Blocky.Core']
-
+import machine , time
+def getPort(a):
+	return 25 , 26 , None 
 class Music :
 	def __init__ ( self , port ):
 		self.port = port
-		self.p = core.getPort(port)
+		self.p = getPort(port)
 		if (self.p[0]==None or self.p[1] == None):
 			return
 		self.bus = None
 	
 	def sendStack(self , cmd , param1 , param2):
 		# plug and play
-		self.bus = core.machine.UART(1 , 9600)
+		self.bus = machine.UART(1 , 9600)
 		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = self.p[0] , tx = self.p[1] )
 		# empty the buffer
 		while self.bus.any():
 			self.bus.read()
 			
-		buff = bytearray([0x7E, 0xFF, 0x06, cmd,0x01, param1, param2, 0xEF])
-		if self.bus.write(buff) == len(buff):
-			self.bus.deinit()
-		nowTime = core.time.ticks_ms()
-		
+		buff = bytearray([0x7E, 0xFF, 0x06, cmd,0x00, param1, param2, 0xEF])
+		#if self.bus.write(buff) == len(buff):
+		#	self.bus.deinit()
+		self.bus.write(buff) 
+		nowTime = time.ticks_ms()
+		print('SEND : ',end='')
+		for x in buff:
+			print(hex(x),end = '\t')
+		print()
 		
 		# no ack 
 
 	def _readRegister(self,cmd,param=None):
 		# plug and play
-		self.bus = core.machine.UART(1 , 9600)
+		self.bus = machine.UART(1 , 9600)
 		self.bus.init(baudrate = 9600 , bits = 8 , parity = None , stop = 1 , rx = self.p[0] , tx = self.p[1] )
 		
-		nowTime = core.time.ticks_ms()
+		nowTime = time.ticks_ms()
 		while self.bus.any() :
 			self.bus.read()
 			
@@ -41,9 +45,14 @@ class Music :
 		else :
 			self.sendStack(cmd,param//256,param%256)
 		while not self.bus.any():
-			if core.time.ticks_diff(core.time.ticks_ms() , nowTime) > 200:
+			if time.ticks_diff(time.ticks_ms() , nowTime) > 200:
 				return None
 		buffer = self.bus.read(10)
+		print('RECV : ',end='')
+		for x in buffer:
+			print(hex(x),end = '\t')
+		print()
+		
 		return buffer[5]*256 + buffer[6]
 		
 	#=====================================================
@@ -51,12 +60,13 @@ class Music :
 		self.sendStack(0x01,0x00,0x00)
 	def previousSong(self):
 		self.sendStack(0x02,0x00,0x00)
-	def play( song , folder = None ):
+	def play( self , song , folder = None ):
 		if folder == None :
 			try :
 				song = max(0,int(song))
 				self.sendStack(0x03, song//256 , song%256)
-			except :
+			except Exception as err:
+				print(err)
 				return 
 			
 		else :
@@ -90,12 +100,12 @@ class Music :
 		
 	def outputDevice( self , device):
 		self.sendStack(0x09,0x00,device)
-		delay(200)
+		time.sleep_ms(200)
 	def sleep(self):
 		self.sendStack(0x0A, 0x00,0x00)
 	def reset(self):
 		self.sendStack(0x0C,0x00,0x00)
-		delay(2000)
+		time.sleep_ms(2000)
 	def start(self):
 		self.sendStack(0x0D,0x00,0x00)
 	def pause(self):
@@ -141,3 +151,5 @@ class Music :
 		return self._readRegister(0x4E,folder)
 	def readFolderCounts(self):
 		return self._readRegister(0x4F)
+		
+m = Music ( 'PORT1') 

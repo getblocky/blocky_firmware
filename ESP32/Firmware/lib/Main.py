@@ -4,7 +4,7 @@ from Blocky.Indicator import indicator
 
 core.indicator = indicator
 core.mainthread = core.asyncio.get_event_loop()
-
+core.gc.threshold(90000)
 
 if 'user_code.py' not in core.os.listdir():
 	f = open('user_code.py','w')
@@ -22,7 +22,10 @@ except :
 	
 def failsafe(source):
 	try :
-		if core.Timer.runtime() - core.blynk.last_call > 10000 :
+		if core.Timer.runtime() - core.blynk.last_call > 20000 :
+			if not core.wifi.wlan_sta.isconnected():
+				print( "[WIFI] Wifi is so bad ! ") 
+				return 
 			print('Usercode is so bad')
 			import os , machine 
 			print('Removing')
@@ -59,24 +62,24 @@ def failsafe(source):
 		
 		
 async def run_user_code(direct = False):
+	print('[OTA] Run User_code')
 	try:
 		wdt_timer.deinit()
 	except :
 		pass
-	
-	await core.asyn.Cancellable.cancel_all()
+	print('[OTA] Timer Created')
 		
 	if direct == True :
 		try :
-			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
-			print("User's watchdog initialized")
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=20000,callback = failsafe)
+			print('[OTA] Watchdog Enabled')
 		except :
 			pass
 		
 		core.user_code = __import__('user_code')
 		return 
 	
-	print('Run User_code')
+	
 	
 	
 	print('Checking library file')
@@ -126,21 +129,25 @@ async def run_user_code(direct = False):
 						l = open('Blocky/'+library+'.py')
 						current_version = ''
 						while True :
-							
 							temp = l.read(1)
+							
 							if temp == '\r' or temp == '\n':
-								break
-							current_version += temp
-							print('CurrentVersion=' , current_version)
-							try :
-								current_version = float(current_version.split('=')[1])
-							except:
-								current_version = 0.0
+								try :
+									current_version = float(current_version.split('=')[1])
+								except:
+									current_version = 0.0
 								
-							if current_version < version :
-								print('Library',library,'is outdated',current_version)
-								if library not in list_library:
-									list_library.append(library)
+								if current_version < version :
+									print('Library',library,'is outdated',current_version)
+									if library not in list_library:
+										list_library.append(library)
+									
+									print('CurrentVersion=' , current_version)
+								break
+							else :
+								current_version += temp
+								
+							
 						l.close()		
 					except :
 						if library not in list_library:
@@ -150,29 +157,26 @@ async def run_user_code(direct = False):
 		f.close()		
 		
 		if len(list_library):
-			print('Updating List -----')
-			print(list_library , end = '\r\n')
-			
-			while not core.wifi.wlan_sta.isconnected():
-				await core.asyncio.sleep_ms(500)
-			
-			
-			print('Wifi Connected , Start downloading library')
-			for x in list_library:
-				core.download(x + '.py' ,'Blocky/{}.py'.format(x))
-			
+			if core.eeprom.get('LIB') == None :
+				core.eeprom.set('LIB' , list_library)
+				print("[LIBRARY_UPDATE]")
+				core.machine.reset()
+			else :
+				print("[LIB_PENDING]")
+				return
 			
 		try :
 			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=30000,callback = failsafe)
-			print("User's watchdog initialized")
+			#print("User's watchdog initialized")
 		except :
 			pass
 		
 		try :
 			del core.sys.modules['user_code']
-		except :
+		except Exception as err:
+			print('[OTA] Delete previous memory footprint failed',err)
 			pass
-			
+		core.gc.collect()
 		print('Starting Usercode with ' , core.gc.mem_free())
 		try :
 			core.user_code = __import__('user_code')
@@ -183,7 +187,9 @@ async def run_user_code(direct = False):
 				await core.asyncio.sleep_ms(500)
 			print('Start user code')
 			core.mainthread.create_task(run_user_code(True))
-				
+		except ImportError :
+			print("[IMPORT_ENOMEM]")
+			core.machine.reset()
 				
 	except MemoryError:
 		print('Blocky is now rebooting')
@@ -217,12 +223,18 @@ async def send_last_word():
 			print('cant remoce')
 					
 async def main(online=False):
-	if  core.cfn_btn.value():
+	if not core.cfn_btn.value():
 		time = core.time.ticks_ms()
 		print('Configure:',end = '')
-		while  core.cfn_btn.value():
+		while  not core.cfn_btn.value():
 			print('#' , end = '')
-			core.time.sleep_ms(500)
+			await core.asyncio.sleep_ms(500)
+			temp = ( core.time.ticks_ms() - time ) //1000
+			if temp > 0 and temp < 5 :
+				core.mainthread.call_soon(core.indicator.heartbeat( (0,100,0) , 1 , core.cfn_btn.value() ))
+			if temp > 5 and temp < 10 :
+				core.mainthread.call_soon(core.indicator.heartbeat( (100,0,0) , 1 , core.cfn_btn.value() ))
+				
 		time = core.time.ticks_ms() - time
 		time = time//1000
 		if time > 0 and time < 5 :
@@ -247,7 +259,7 @@ async def main(online=False):
 		await bootmode.Start() 
 		print('mainthread-> Boot Completed')
 		core.machine.reset()
-	
+	print('[CONFIG] -> Loaded')
 	if core.eeprom.get('OFFLINE') == True and core.eeprom.get('OTA_LOCK') == True:
 		def clean_up (s):
 			try :
@@ -257,15 +269,18 @@ async def main(online=False):
 			core.mainthread.call_soon(main(True))
 			core.cfn_btn.irq(trigger=0)
 		core.cfn_btn.irq(trigger=core.machine.Pin.IRQ_FALLING,handler = clean_up)
+		print('[MAIN] -> Running offline mode')
 		core.user_code = __import__('user_code')
 		return
-		
+	print('[WIFI] -> Loaded')
 	core.wifi = __import__('Blocky/wifi')
 	from Blocky.BlynkLib import Blynk
+	print('[BLYNK] -> Loaded')
 	core.blynk = Blynk(core.config['token'],ota = run_user_code)		
 	# There are some DeviceLog that cant be send
 	core.mainthread.create_task(send_last_word())
 	core.mainthread.create_task(run_user_code())
+	core.mainthread.create_task(core.Timer.alarm_service())
 	#Routine check of connection to server
 	while True :
 		await core.asyncio.sleep_ms(500)
@@ -274,8 +289,14 @@ async def main(online=False):
 			print('Oh Wow , wifi is disconnected , Connecting back')
 			await core.wifi.connect(core.config['known_networks'])
 			print('Wifi is on , connecting to Blynk')
-			await core.asyncio.sleep_ms(500)
+			
+			if core.eeprom.get('LIB')!= None:
+				for x in core.eeprom.get('LIB'):
+					core.download(x + '.py' ,'Blocky/{}.py'.format(x))
+				core.mainthread.create_task(run_user_code(True))
+			core.eeprom.set('LIB' , None)
 			core.mainthread.create_task(core.blynk.run())
+			
 			while not core.flag.blynk :
 				await core.asyncio.sleep_ms(500)
 			print('You are back online bro')
@@ -289,6 +310,7 @@ async def main(online=False):
 			
 		
 #	To avoid random crash due to random error 
+
 # 	This wrapper make sure that it keep running
 def wrapper ():
 	while True :
@@ -303,6 +325,7 @@ def wrapper ():
 core.blynk = None
 core.mainthread.create_task(main())
 core._thread.start_new_thread(wrapper,())
-
+#wrapper()
 # Disable 2 _thread will save 16K RAM
+
 

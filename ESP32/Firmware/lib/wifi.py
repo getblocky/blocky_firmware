@@ -9,12 +9,13 @@ wlan_sta  = core.network.WLAN(core.network.STA_IF)
 wlan_sta.active(True)
 
 async def connect(ap=None):
+	print('[WIFI] -> Connecting')
 	if ap == None :
 		while not wlan_sta.isconnected() :
 			await core.asyncio.sleep_ms(100)
 			
 	else :
-		
+		core.mainthread.call_soon(core.indicator.heartbeat( (0,50,50) , 1 , wlan_sta.isconnected ))
 		while not wlan_sta.isconnected():
 			
 			l = []
@@ -39,3 +40,4 @@ async def connect(ap=None):
 				core.Timer.sync_ntp()
 				break
 			await core.asyncio.sleep_ms(10000)
+			print('[WIFI] -> Reconneting')
