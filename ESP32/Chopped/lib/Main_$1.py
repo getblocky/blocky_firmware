@@ -1,4 +1,6 @@
-thon readline() use different newline syntax !
+eadlines() or readline() right
+	# uPython user continuous memory region for readlines() -> MemoryError
+	# uPython readline() use different newline syntax !
 	# uPython's regex use recursive while max stack = 39
 	# Damn right =))
 	
@@ -40,21 +42,25 @@ thon readline() use different newline syntax !
 						l = open('Blocky/'+library+'.py')
 						current_version = ''
 						while True :
-							
 							temp = l.read(1)
+							
 							if temp == '\r' or temp == '\n':
-								break
-							current_version += temp
-							print('CurrentVersion=' , current_version)
-							try :
-								current_version = float(current_version.split('=')[1])
-							except:
-								current_version = 0.0
+								try :
+									current_version = float(current_version.split('=')[1])
+								except:
+									current_version = 0.0
 								
-							if current_version < version :
-								print('Library',library,'is outdated',current_version)
-								if library not in list_library:
-									list_library.append(library)
+								if current_version < version :
+									print('Library',library,'is outdated',current_version)
+									if library not in list_library:
+										list_library.append(library)
+									
+									print('CurrentVersion=' , current_version)
+								break
+							else :
+								current_version += temp
+								
+							
 						l.close()		
 					except :
 						if library not in list_library:
@@ -64,13 +70,7 @@ thon readline() use different newline syntax !
 		f.close()		
 		
 		if len(list_library):
-			print('Updating List -----')
-			print(list_library , end = '\r\n')
-			
-			while not core.wifi.wlan_sta.isconnected():
-				await core.asyncio.sleep_ms(500)
-			
-			
-			print('Wifi Connected , Start downloading library')
-			for x in list_library:
-				core.download(x + '.py' ,'Bloc
+			if core.eeprom.get('LIB') == None :
+				core.eeprom.set('LIB' , list_library)
+				print("[LIBRARY_UPDATE]")
+				core.

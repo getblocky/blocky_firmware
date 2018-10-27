@@ -1,4 +1,18 @@
-)
+) - time ) //1000
+			if temp > 0 and temp < 5 :
+				core.mainthread.call_soon(core.indicator.heartbeat( (0,100,0) , 1 , core.cfn_btn.value() ))
+			if temp > 5 and temp < 10 :
+				core.mainthread.call_soon(core.indicator.heartbeat( (100,0,0) , 1 , core.cfn_btn.value() ))
+				
+		time = core.time.ticks_ms() - time
+		time = time//1000
+		if time > 0 and time < 5 :
+			from Blocky.BootMode import BootMode
+			bootmode = BootMode()
+			await bootmode.Start()
+		if time >= 5 and time < 10 :
+			f = open('user_code.py','w')
+			f.close()
 			
 	try :
 		core.config = core.json.loads(open('config.json').read())
@@ -14,7 +28,7 @@
 		await bootmode.Start() 
 		print('mainthread-> Boot Completed')
 		core.machine.reset()
-	
+	print('[CONFIG] -> Loaded')
 	if core.eeprom.get('OFFLINE') == True and core.eeprom.get('OTA_LOCK') == True:
 		def clean_up (s):
 			try :
@@ -24,36 +38,20 @@
 			core.mainthread.call_soon(main(True))
 			core.cfn_btn.irq(trigger=0)
 		core.cfn_btn.irq(trigger=core.machine.Pin.IRQ_FALLING,handler = clean_up)
+		print('[MAIN] -> Running offline mode')
 		core.user_code = __import__('user_code')
 		return
-		
+	print('[WIFI] -> Loaded')
 	core.wifi = __import__('Blocky/wifi')
 	from Blocky.BlynkLib import Blynk
+	print('[BLYNK] -> Loaded')
 	core.blynk = Blynk(core.config['token'],ota = run_user_code)		
 	# There are some DeviceLog that cant be send
 	core.mainthread.create_task(send_last_word())
 	core.mainthread.create_task(run_user_code())
+	core.mainthread.create_task(core.Timer.alarm_service())
 	#Routine check of connection to server
 	while True :
 		await core.asyncio.sleep_ms(500)
 		# Recover from wifi jittering
-		if not core.wifi.wlan_sta.isconnected():
-			print('Oh Wow , wifi is disconnected , Connecting back')
-			await core.wifi.connect(core.config['known_networks'])
-			print('Wifi is on , connecting to Blynk')
-			await core.asyncio.sleep_ms(500)
-			core.mainthread.create_task(core.blynk.run())
-			while not core.flag.blynk :
-				await core.asyncio.sleep_ms(500)
-			print('You are back online bro')
-		# Recover from Blynk disconnect problem
-		if core.flag.blynk == False  :
-			print('Blynk disconnected somehow')
-			core.mainthread.create_task(core.blynk.run())
-			while not core.flag.blynk:
-				await core.asyncio.sleep_ms(500)
-			print('Blynk is back !')
-			
-		
-#	To avoid random crash due to random error 
-# 	This wrapper make 
+		if not core.wifi.wl

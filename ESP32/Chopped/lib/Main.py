@@ -4,7 +4,7 @@ from Blocky.Indicator import indicator
 
 core.indicator = indicator
 core.mainthread = core.asyncio.get_event_loop()
-
+core.gc.threshold(90000)
 
 if 'user_code.py' not in core.os.listdir():
 	f = open('user_code.py','w')
@@ -22,7 +22,10 @@ except :
 	
 def failsafe(source):
 	try :
-		if core.Timer.runtime() - core.blynk.last_call > 10000 :
+		if core.Timer.runtime() - core.blynk.last_call > 20000 :
+			if not core.wifi.wlan_sta.isconnected():
+				print( "[WIFI] Wifi is so bad ! ") 
+				return 
 			print('Usercode is so bad')
 			import os , machine 
 			print('Removing')
@@ -59,29 +62,27 @@ def failsafe(source):
 		
 		
 async def run_user_code(direct = False):
+	print('[OTA] Run User_code')
 	try:
 		wdt_timer.deinit()
 	except :
 		pass
-	
-	await core.asyn.Cancellable.cancel_all()
+	print('[OTA] Timer Created')
 		
 	if direct == True :
 		try :
-			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=10000,callback = failsafe)
-			print("User's watchdog initialized")
+			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=20000,callback = failsafe)
+			print('[OTA] Watchdog Enabled')
 		except :
 			pass
 		
 		core.user_code = __import__('user_code')
 		return 
 	
-	print('Run User_code')
+	
 	
 	
 	print('Checking library file')
 	
 	# Why am I doing this huh ?
-	# We can use readlines() or readline() right
-	# uPython user continuous memory region for readlines() -> MemoryError
-	# uPy
+	# We can use r

@@ -83,12 +83,20 @@ async def cleanup():
 async def call_once(name,function):
 	print('[CALLING] {} -> {}'.format(name,function))
 	if name in asyn.NamedTask.instances:
-		await asyn.NamedTask.cancel ( name )
-		while asyn.NamedTask.is_running (name):
-			await asyncio.sleep_ms(10)
+		if asyn.NamedTask.is_running(name):
+			await asyn.NamedTask.cancel ( name )
+			while asyn.NamedTask.is_running (name):
+				await asyncio.sleep_ms(10)
 	#mainthread.call_soon(asyn.NamedTask(name,function))
-	mainthread.call_soon( asyn.NamedTask(name,function) ())
-	print('[CALLING] {} -> {}  DONE '.format(name,function))
+	if function != None :
+		print('[CALLING] {} -> {}  DONE '.format(name,function))
+		mainthread.call_soon( asyn.NamedTask(name,function) ())
+		# Avoid pend throw for just stated-generator
+		await asyncio.sleep_ms(0)
+	else :
+		print('[CANCEL] {}'.format(name))
+	
+	
 	
 
 def download(filename , path):

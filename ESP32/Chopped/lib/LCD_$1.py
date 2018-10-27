@@ -1,74 +1,67 @@
-		#LcdApi.__init__(self, num_lines, num_columns)
-		self.num_lines = num_lines
-		if self.num_lines > 4:
-			self.num_lines = 4
-		self.num_columns = num_columns
-		if self.num_columns > 40:
-			self.num_columns = 40
-		self.cursor_x = 0
-		self.cursor_y = 0
-		self.backlight = True
-		self.display_off()
-		self.backlight_on()
-		self.clear()
-		self.hal_write_command(LCD_ENTRY_MODE | LCD_ENTRY_INC)
-		self.hide_cursor()
-		self.display_on()
-		#
-		cmd = LCD_FUNCTION
-		if num_lines > 1:
-			cmd |= LCD_FUNCTION_2LINES
-		self.hal_write_command(cmd)
+ Lines 1 & 3 add 0x40
+		if cursor_y & 2:
+			addr += 0x14	# Lines 2 & 3 add 0x14
+		self.hal_write_command(0x80 | addr)
+
+	def putchar(self, char):
+		if char != '\n':
+			self.hal_write_data(ord(char))
+			self.cursor_x += 1
+		if self.cursor_x >= self.num_columns or char == '\n':
+			self.cursor_x = 0
+			self.cursor_y += 1
+			if self.cursor_y >= self.num_lines:
+				self.cursor_y = 0
+			self.move_to(self.cursor_x, self.cursor_y)
+
+	def putstr(self, string):
+		for char in string:
+			self.putchar(char)
+
+	def custom_char(self, location, charmap):
+		location &= 0x7
+		self.hal_write_command(0x40 | (location << 3))
+		core.time.sleep_us(40)
+		for i in range(8):
+			self.hal_write_data(charmap[i])
+			core.time.sleep_us(40)
+		self.move_to(self.cursor_x, self.cursor_y)
+
+	def hal_backlight_on(self):
+		pass
+
+	def hal_backlight_off(self):
+		pass
+
+	def hal_write_command(self, cmd):
+		raise NotImplementedError
+
+	def hal_write_data(self, data):
+		raise NotImplementedError
 		
-		
+	def hal_write_init_nibble(self, nibble):
+		byte = ((nibble >> 4) & 0x0f) << 4
+		self.i2c.writeto(self.i2c_addr, bytearray([byte | 0x04]))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte]))
 
-	def clear(self):
-		"""Clears the LCD display and moves the cursor to the top left
-		corner.
-		"""
-		self.hal_write_command(LCD_CLR)
-		self.hal_write_command(LCD_HOME)
-		self.cursor_x = 0
-		self.cursor_y = 0
+	def hal_backlight_on(self):
+		self.i2c.writeto(self.i2c_addr, bytearray([1 << 3]))
 
-	def show_cursor(self):
-		"""Causes the cursor to be made visible."""
-		self.hal_write_command(LCD_ON_CTRL | LCD_ON_DISPLAY |
-							   LCD_ON_CURSOR)
+	def hal_backlight_off(self):
+		self.i2c.writeto(self.i2c_addr, bytearray([0]))
 
-	def hide_cursor(self):
-		"""Causes the cursor to be hidden."""
-		self.hal_write_command(LCD_ON_CTRL | LCD_ON_DISPLAY)
+	def hal_write_command(self, cmd):
+		byte = ((self.backlight << 3) | (((cmd >> 4) & 0x0f) << 4))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte | 0x04]))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte]))
+		byte = ((self.backlight << 3) | ((cmd & 0x0f) << 4))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte | 0x04]))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte]))
+		if cmd <= 3:
+			# The home and clear commands require a worst case delay of 4.1 msec
+			core.time.sleep_ms(5)
 
-	def blink_cursor_on(self):
-		"""Turns on the cursor, and makes it blink."""
-		self.hal_write_command(LCD_ON_CTRL | LCD_ON_DISPLAY |
-							   LCD_ON_CURSOR | LCD_ON_BLINK)
-
-	def blink_cursor_off(self):
-		"""Turns on the cursor, and makes it no blink (i.e. be solid)."""
-		self.hal_write_command(LCD_ON_CTRL | LCD_ON_DISPLAY |
-							   LCD_ON_CURSOR)
-
-	def display_on(self):
-		"""Turns on (i.e. unblanks) the LCD."""
-		self.hal_write_command(LCD_ON_CTRL | LCD_ON_DISPLAY)
-
-	def display_off(self):
-		"""Turns off (i.e. blanks) the LCD."""
-		self.hal_write_command(LCD_ON_CTRL)
-
-	def backlight_on(self):
-		"""Turns the backlight on.
-
-		This isn't really an LCD command, but some modules have backlight
-		controls, so this allows the hal to pass through the command.
-		"""
-		self.backlight = True
-		self.hal_backlight_on()
-
-	def backlight_off(self):
-		"""Turns the backlight off.
-
-		This isn't really an LCD command, but some modules have backlight
-		controls, so this allows th
+	def hal_write_data(self, data):
+		byte = (0x01 | (self.backlight << 3) | (((data >> 4) & 0x0f) << 4))
+		self.i2c.writeto(self.i2c_addr, bytearray([byte | 0x04]))
+		self.i2c.writeto(sel

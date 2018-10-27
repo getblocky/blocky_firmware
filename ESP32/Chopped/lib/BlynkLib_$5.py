@@ -1,4 +1,38 @@
-			self.func = func
+ val))
+	def set_property(self, pin, prop, val):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
+
+	def log_event(self, event, descr=None):
+		if self.state == AUTHENTICATED:
+			if descr==None:
+				self._send(self._format_msg(MSG_EVENT_LOG, event))
+			else:
+				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
+	def log(self,message , http = False):
+		self.virtual_write(127,message,http=http)
+		
+	def sync_all(self):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_HW_SYNC))
+
+	def sync_virtual(self, pin):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
+	
+	def add_virtual_pin(self, pin, read=None, write=None):
+		if isinstance(pin, int) and pin in range(0, MAX_VIRTUAL_PINS):
+			if read != None :
+				self._vr_pins_read[pin] = read
+			if write != None :
+				self._vr_pins_write[pin] = write
+		else:
+			raise ValueError('the pin must be an integer between 0 and %d' % (MAX_VIRTUAL_PINS - 1))
+
+	def VIRTUAL_READ(blynk, pin):
+		class Decorator():
+			def __init__(self, func):
+				self.func = func
 				blynk._vr_pins[pin] = VrPin(func, None)
 				#print(blynk, func, pin)
 			def __call__(self):
@@ -22,7 +56,8 @@
 
 	def disconnect(self):
 		self._do_connect = False
-
+	def sending ( self , to , data ) :
+		self._send(self._format_msg(MSG_HW, 'vw', pin, val))
 	async def run(self):
 		self._start_time = time.ticks_ms()
 		self._task_millis = self._start_time
@@ -33,38 +68,4 @@
 		self._tx_count = 0
 		self._m_time = 0
 		self.state = DISCONNECTED
-		while not core.wifi.wlan_sta.isconnected():
-			self.last_call = core.Timer.runtime()
-			await core.asyncio.sleep_ms(500)
-		while True:
-			self.last_call = core.Timer.runtime()
-			while self.state != AUTHENTICATED:
-				self.last_call = core.Timer.runtime()
-				if self._do_connect:
-					await core.asyncio.sleep_ms(100) # Delay in every retry
-					try:
-						self.state = CONNECTING
-						if self._ssl:
-							import ssl
-							print('SSL: Connecting to %s:%d' % (self._server, self._port))
-							ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
-							self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
-						else:
-							print('TCP: Connecting to %s:%d' % (self._server, self._port))
-							self.conn = socket.socket()
-							print('Socket')
-						self.conn.settimeout(0.1)
-						
-						while True :
-							await core.asyncio.sleep_ms(5000)
-							try :
-								b=socket.getaddrinfo(self._server, self._port)[0][4]
-								self.conn.connect(b)
-								break
-							except OSError:
-								print('>')
-								continue
-						print('Connected')
-					except Exception as err:
-						core.sys.print_exception(err)
-						self._close('connection with the Blynk
+		while not core.wifi.wlan_sta.isconnect

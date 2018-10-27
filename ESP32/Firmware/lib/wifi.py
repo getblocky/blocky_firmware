@@ -10,6 +10,7 @@ wlan_sta.active(True)
 
 async def connect(ap=None):
 	print('[WIFI] -> Connecting')
+	await core.indicator.show('wifi-connecting')
 	if ap == None :
 		while not wlan_sta.isconnected() :
 			await core.asyncio.sleep_ms(100)

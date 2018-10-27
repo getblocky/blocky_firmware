@@ -1,57 +1,64 @@
-its unstable behaviour 
-		# DEPRECATED
-		"""
-		print('set to ' , color , type );self.rgb[0] = (0,0,0)
-		if type == 'heartbeat':
-			self.animation = type
-			self.color = color 
-			def _handler (self):
-				r,g,b = self.rgb[0]
-				if (r,g,b) == (0,0,0):	self.fcolor = self.color
-				if (r,g,b) == self.fcolor:self.fcolor = (0,0,0)
-				d,e,f = self.fcolor
-				if (r<d): r = r + 1
-				if (r>d): r = r - 1 if r > 1 else 0
-				if (g<e): g = g + 1
-				if (g>e): g = g - 1 if g > 1 else 0
-				if (b<f): b = b + 1
-				if (b>f): b = b - 1 if b > 1 else 0
-				self.rgb[0] =  (r,g,b)
-				self.rgb.write()
-			AddTask(name = 'sys_led' , function = _handler , mode = 'repeat',time = speed,arg = (self))
-		elif type == 'pulse':
-			
-			self.animation = type
-			self.color = (color[0]//5*5,color[1]//5*5,color[2]//5*5) 
-			self.fcolor = (color[0]//5*5,color[1]//5*5,color[2]//5*5) 
-			self.rgb[0]  = (0,0,0)
-			def _handler (self):
-				global r,g,b
-				r,g,b = self.rgb[0]
-				if (r,g,b) == self.color:self.fcolor = (0,0,0)
-				d,e,f = self.fcolor
-				if (r<d): r = r + 5
-				if (r>d): r = r - 5 if r > 5 else 0
-				if (g<e): g = g + 5
-				if (g>e): g = g - 5 if g > 5 else 0
-				if (b<f): b = b + 5
-				if (b>f): b = b - 5 if b >5 else 0
-				self.rgb[0] =  (r,g,b)
-				self.rgb.write()
-				if self.rgb[0] == (0,0,0):
-					DeleteTask('sys_led')
-					
-			AddTask(name = 'sys_led' , function = _handler , mode = 'repeat',time = speed,arg = (self))
-		else :
-			DeleteTask('sys_led')
-			self.rgb[0] = (0,0,0) ; self.rgb.write()
-		"""
-		
-indicator = Indicator()
-
+-success':
+			pass
+		core.mainthread.create_task ( core.asyn.rgb.NamedTask('indicator-handler',self.handler) )
 	
-
-
-
-
-
+	async def show (self , state):
+		if state == 'blynk-authenticating':
+			@core.asyn.cancellable
+			async def temp ():
+				while True :
+					for x in range(12):
+						await core.asyncio.sleep_ms( abs(6-x)*5 )
+						self.rgb.fill((0,0,0))
+						self.rgb[x] = (25,0,25)
+						self.rgb[x-1 if x-1 >=0 else 11-x] = (10,0,10)
+						self.rgb[x-2 if x-2 >=0 else 11-x] = (5,0,5)
+						self.rgb.write()
+			await core.call_once('indicator',temp)
+		if state == 'wifi-connecting':
+			@core.asyn.cancellable
+			async def temp ():
+				while True :
+					for x in range(12):
+						await core.asyncio.sleep_ms( abs(6-x)*5 )
+						self.rgb.fill((0,0,0))
+						self.rgb[x] = (50,25,0)
+						self.rgb[x-1 if x-1 >=0 else 11-x] = (20,10,0)
+						self.rgb[x-2 if x-2 >=0 else 11-x] = (5,5,0)
+						self.rgb.write()
+			await core.call_once('indicator',temp)
+		if state == 'blynk-authenticated':
+			@core.asyn.cancellable
+			async def temp ():
+				for x in range(12):
+					await core.asyncio.sleep_ms(30)
+					self.rgb.fill((0,x*5,0))
+					self.rgb.write()
+				for x in range(12,-1,-1):
+					await core.asyncio.sleep_ms(30)
+					self.rgb.fill((0,x*5,0))
+					self.rgb.write()
+			await core.call_once('indicator',temp)
+		if state == 'ota-starting':
+			@core.asyn.cancellable
+			async def temp ():
+				while True :
+					for x in range(12):
+						await core.asyncio.sleep_ms( abs(6-x)*5 )
+						self.rgb.fill((0,0,0))
+						self.rgb[x] = (50,25,0)
+						self.rgb[x-1 if x-1 >=0 else 11-x] = (0,20,10)
+						self.rgb[x-2 if x-2 >=0 else 11-x] = (0,10,10)
+						self.rgb[x-3 if x-3 >=0 else 11-x] = (0,5,5)
+						self.rgb.write()
+			await core.call_once('indicator',temp)
+		if state == 'ota-success':
+			@core.asyn.cancellable
+			async def temp ():
+				for x in range(5):
+					self.rgb.fill((0,x*8,0))
+					self.rgb.write()
+					await asyncio.sleep_ms(10)
+				for x in range(5,-1,-1):
+					self.rgb.fill((0,x*8,0))
+	

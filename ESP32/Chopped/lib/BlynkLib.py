@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
+print('[BLYNK] Loading ...')
 
 import socket
 import struct
@@ -42,7 +42,7 @@ except ImportError:
 HDR_LEN = const(5)
 HDR_FMT = "!BHH"
 
-MAX_MSG_PER_SEC = const(20)
+MAX_MSG_PER_SEC = const(1000)
 
 MSG_RSP = const(0)
 MSG_LOGIN = const(2)
@@ -58,5 +58,4 @@ MSG_PROPERTY = const(19)
 MSG_HW = const(20)
 MSG_EVENT_LOG = const(64)
 
-MSG_REDIRECT  = const(41)  # TODO: not implemented
-MSG_DBG_PRIN
+MSG_REDIRECT  = const(41)  # TODO

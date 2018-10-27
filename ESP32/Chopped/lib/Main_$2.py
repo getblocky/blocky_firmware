@@ -1,17 +1,20 @@
-ky/{}.py'.format(x))
-			
+machine.reset()
+			else :
+				print("[LIB_PENDING]")
+				return
 			
 		try :
 			wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=30000,callback = failsafe)
-			print("User's watchdog initialized")
+			#print("User's watchdog initialized")
 		except :
 			pass
 		
 		try :
 			del core.sys.modules['user_code']
-		except :
+		except Exception as err:
+			print('[OTA] Delete previous memory footprint failed',err)
 			pass
-			
+		core.gc.collect()
 		print('Starting Usercode with ' , core.gc.mem_free())
 		try :
 			core.user_code = __import__('user_code')
@@ -22,7 +25,9 @@ ky/{}.py'.format(x))
 				await core.asyncio.sleep_ms(500)
 			print('Start user code')
 			core.mainthread.create_task(run_user_code(True))
-				
+		except ImportError :
+			print("[IMPORT_ENOMEM]")
+			core.machine.reset()
 				
 	except MemoryError:
 		print('Blocky is now rebooting')
@@ -56,18 +61,10 @@ async def send_last_word():
 			print('cant remoce')
 					
 async def main(online=False):
-	if  core.cfn_btn.value():
+	if not core.cfn_btn.value():
 		time = core.time.ticks_ms()
 		print('Configure:',end = '')
-		while  core.cfn_btn.value():
+		while  not core.cfn_btn.value():
 			print('#' , end = '')
-			core.time.sleep_ms(500)
-		time = core.time.ticks_ms() - time
-		time = time//1000
-		if time > 0 and time < 5 :
-			from Blocky.BootMode import BootMode
-			bootmode = BootMode()
-			await bootmode.Start()
-		if time >= 5 and time < 10 :
-			f = open('user_code.py','w')
-			f.close(
+			await core.asyncio.sleep_ms(500)
+			temp = ( core.time.ticks_ms(

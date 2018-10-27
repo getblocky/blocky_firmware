@@ -1,4 +1,5 @@
-T  = const(55) # TODO: not implemented
+: not implemented
+MSG_DBG_PRINT  = const(55) # TODO: not implemented
 
 STA_SUCCESS = const(200)
 
@@ -65,7 +66,7 @@ class Blynk:
 	def _format_msg(self, msg_type, *args):
 		data = ('\0'.join(map(str, args))).encode('ascii')
 		return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
-		
+	
 	async def _handle_hw(self, data):
 		try :
 			params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
@@ -76,5 +77,4 @@ class Blynk:
 			elif cmd == 'vw': 
 				pin = int(params.pop(0))
 				if pin == 126 :
-					print('['+str(core.Timer.runtime())+'] OTA Message Received')
-					co
+					print('['+str(core.Timer.runtime())+'] O

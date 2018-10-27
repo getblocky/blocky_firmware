@@ -1,4 +1,13 @@
-
+			
+	
+	def volume(self , volume = None ):
+		if volume == None :
+			return self._readRegister(0x43)
+		else :
+			try :
+				volume = max(0,min(30,int(volume)))
+				self.sendStack(0x06 , 0x00 , volume)
+			except :
 				return 
 	
 	def loop ( self , song):
@@ -13,12 +22,12 @@
 		
 	def outputDevice( self , device):
 		self.sendStack(0x09,0x00,device)
-		delay(200)
+		time.sleep_ms(200)
 	def sleep(self):
 		self.sendStack(0x0A, 0x00,0x00)
 	def reset(self):
 		self.sendStack(0x0C,0x00,0x00)
-		delay(2000)
+		time.sleep_ms(2000)
 	def start(self):
 		self.sendStack(0x0D,0x00,0x00)
 	def pause(self):
@@ -62,5 +71,4 @@
 		return self._readRegister(0x4C)
 	def readFileCountsInFolder(self,folder):
 		return self._readRegister(0x4E,folder)
-	def readFolderCounts(self):
-		return self._readRegister(0x4F)
+	def readFolderCounts(se

@@ -146,7 +146,6 @@ class Blynk:
 							core.ota_file = open('temp_code.py','w')
 						if params[1] == "OTA":
 							await core.asyn.Cancellable.cancel_all()
-							core.indicator.animate('ota-starting')
 							await core.cleanup()
 							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
 						else :
@@ -161,15 +160,14 @@ class Blynk:
 								print('^^~')
 								self.virtual_write(127,'[OTA_DONE]',http = True)
 								print('User code saved')
-								core.indicator.animate('ota-success')
-								for x in range(5):
-									core.indicator.rgb.fill((0,x*8,0))
+								for x in range(7):
+									core.indicator.rgb.fill((0,x*10,0))
 									core.indicator.rgb.write()
-									await core.asyncio.sleep_ms(10)
+									await core.asyncio.sleep_ms(20)
 								for x in range(5,-1,-1):
-									core.indicator.rgb.fill((0,x*8,0))
+									core.indicator.rgb.fill((0,x*10,0))
 									core.indicator.rgb.write()
-									await core.asyncio.sleep_ms(10)
+									await core.asyncio.sleep_ms(20)
 								core.mainthread.call_soon(self.ota())
 								
 							if curr_part < total_part:
@@ -425,7 +423,7 @@ class Blynk:
 						core.sys.print_exception(err)
 						self._close('connection with the Blynk servers failed')
 						continue
-					core.indicator.animate('blynk-authenticating')
+					await core.indicator.show('blynk-authenticating')
 					self.state = AUTHENTICATING
 					hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
 					print('Blynk connection successful, authenticating...')
@@ -441,7 +439,7 @@ class Blynk:
 						self._close('Blynk authentication failed')
 						core.indicator.animate('blynk-failed')
 						continue
-					core.indicator.animate('blynk-success')
+					await core.indicator.show('blynk-authenticated')
 					self.state = AUTHENTICATED
 					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
 					print("[BLYNK] Happy Blynking ! ")
@@ -500,7 +498,8 @@ class Blynk:
 					self._close('Blynk server is offline')
 					print('BlynkServer->DEAD')
 					core.flag.blynk = False
-					break
+					await core.indicator.show('blynk-authenticating')
+					return
 				else :
 					core.flag.blynk = True
 					

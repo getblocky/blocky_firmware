@@ -47,9 +47,28 @@ def sync_ntp():
 		tm = tm[0:3] + (0,) + tm[3:6] + (0,)
 		core.machine.RTC().datetime(tm)
 		print('[NTP] Synced at {}'.format(core.time.localtime()))
+		core.rtc = True
 		
-def current_time(format=None):
-	if format==None:
+def current(field=None):
+	if core.rtc == False :
+		return 
+	if field==None:
 		return core.time.localtime()
-	
-	
+	if field == "year":
+		return core.time.localtime()[0]
+	if field == "month":
+		return core.time.localtime()[1]
+	if field == "date":
+		return core.time.localtime()[2]
+	if field == "hour":
+		return core.time.localtime()[3]
+	if field == "minute":
+		return core.time.localtime()[4]
+	if field == "second":
+		return core.time.localtime()[5]
+	if field == "day":
+		day = core.time.localtime()[6]
+		if day == 0 :
+			return "Monday"
+		if day == 1 :
+			retur

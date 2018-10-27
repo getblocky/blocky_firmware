@@ -46,18 +46,16 @@ class Button:
 			if self.button.value() == 0:
 				if len(self.his) and (core.Timer.runtime() - self.his[-1]) > 500 :
 					print('pressed ' , len(self.his)//2)
-					self.execute('pressed' ,len(self.his)//2 )
+					core.mainthread.call_soon(self.execute('pressed' ,len(self.his)//2 ))
 					self.his.clear()
 					
-	def execute(self,type,time):
+	async def execute(self,type,time):
 		try :
-		
 			function = self.ButtonTaskList.get( str(type) + str(time) )
 			if function == None :
 				raise Exception
-			core.mainthread.create_task(core.asyn.Cancellable(function)())
 				
-		except Exception as err:
-			print('btn-exec->' , err)
-			pass
-			
+			if core.flag.duplicate == False :
+				await core.call_once('user_button_{}{}'.format(type,time) , function)
+			else:
+				core.mainthread.create_task(core.asyn.Cancellable(function)())

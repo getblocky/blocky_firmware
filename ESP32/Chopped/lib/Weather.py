@@ -23,7 +23,6 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.temperature()
 	def humidity(self):
@@ -32,7 +31,6 @@ class Weather:
 			try :
 				self.weather.measure()
 			except Exception:
-				core.blynk.log('Your Weather Module on '+self.p+' is not working !')
 				pass
 		return self.weather.humidity()
 	"""
@@ -67,4 +65,7 @@ class Weather:
 					pass
 			if self.weather.humidity() != temp and self.cb_humidity:
 				try :
-					if self.
+					if self.cb_humidity[1] == 'f':
+						self.cb_humidity[0](self.weather.humidity())
+					if self.cb_humidity[1] == 'g':
+						loop = asyncio.get_event_loop(
