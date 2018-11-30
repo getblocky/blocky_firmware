@@ -1,24 +1,4 @@
- val))
-	def set_property(self, pin, prop, val):
-		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
-
-	def log_event(self, event, descr=None):
-		if self.state == AUTHENTICATED:
-			if descr==None:
-				self._send(self._format_msg(MSG_EVENT_LOG, event))
-			else:
-				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
-	def log(self,message , http = False):
-		self.virtual_write(127,message,http=http)
-		
-	def sync_all(self):
-		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_HW_SYNC))
-
-	def sync_virtual(self, pin):
-		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
+end(self._format_msg(MSG_HW_SYNC, 'vr', pin))
 	
 	def add_virtual_pin(self, pin, read=None, write=None):
 		if isinstance(pin, int) and pin in range(0, MAX_VIRTUAL_PINS):
@@ -68,4 +48,21 @@
 		self._tx_count = 0
 		self._m_time = 0
 		self.state = DISCONNECTED
-		while not core.wifi.wlan_sta.isconnect
+		while not core.wifi.wlan_sta.isconnected():
+			self.last_call = core.Timer.runtime()
+			await core.asyncio.sleep_ms(500)
+		while True:
+			self.last_call = core.Timer.runtime()
+			while self.state != AUTHENTICATED:
+				self.last_call = core.Timer.runtime()
+				if self._do_connect:
+					await core.asyncio.sleep_ms(100) # Delay in every retry
+					core.gc.collect() 
+					try:
+						core.indicator.animate('blynk-connecting')
+						self.state = CONNECTING
+						if self._ssl:
+							import ssl
+							print('SSL: Connecting to %s:%d' % (self._server, self._port))
+							ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
+							self.conn = 

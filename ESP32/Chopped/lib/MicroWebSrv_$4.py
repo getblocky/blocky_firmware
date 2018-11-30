@@ -1,4 +1,5 @@
-		if 'upgrade' in self._headers.get('Connection', '').lower() :
+
+			if 'upgrade' in self._headers.get('Connection', '').lower() :
 				return self._headers.get('Upgrade', '').lower()
 			return None
 		
@@ -37,11 +38,13 @@
 		
 		def _write(self, data) :
 			try :
+				
 				if isinstance(data , str):
 					return self._client._socket.write(data)
 				elif isinstance(data , list):
 					for x in data :
 						self._client._socket.write(x)
+				
 			except Exception as err:
 				print('socket->_write->' , err)
 		
@@ -68,4 +71,4 @@
 		#	pass		
 		
 		def WriteSwitchProto(self, upgrade, headers=None) :
-			self._writeFirstLine(101)
+			self._writeFi

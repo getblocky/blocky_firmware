@@ -1,50 +1,4 @@
-: not implemented
-MSG_DBG_PRINT  = const(55) # TODO: not implemented
-
-STA_SUCCESS = const(200)
-
-HB_PERIOD = const(10)
-NON_BLK_SOCK = const(0)
-MIN_SOCK_TO = const(1) # 1 second
-MAX_SOCK_TO = const(5) # 5 seconds, must be < HB_PERIOD
-RECONNECT_DELAY = const(1) # 1 second
-TASK_PERIOD_RES = const(50) # 50 ms
-IDLE_TIME_MS = const(5) # 5 ms
-
-RE_TX_DELAY = const(2)
-MAX_TX_RETRIES = const(3)
-
-MAX_VIRTUAL_PINS = const(125)
-
-DISCONNECTED = const(0)
-CONNECTING = const(1)
-AUTHENTICATING = const(2)
-AUTHENTICATED = const(3)
-
-EAGAIN = const(11)
-
-LOGO = "1"
-
-def sleep_from_until (start, delay):
-	while time.ticks_diff(start, time.ticks_ms()) < delay:
-		idle_func()
-	return start + delay
-
-class VrPin:
-	def __init__(self, read=None, write=None):
-		self.read = read
-		self.write = write
-
-
-class Blynk:
-	def __init__(self, token, server='blynk.getblocky.com', port=None, connect=True, ssl=False,ota=None):
-		self._vr_pins = {}
-		self._vr_pins_read = {}
-		self._vr_pins_write = {}
-		self._do_connect = False
-		self._on_connect = None
-		self._task = None
-		self._task_period = 0
+ 0
 		self._token = token
 		self.message = None
 		if isinstance (self._token, str):
@@ -76,5 +30,35 @@ class Blynk:
 			# Handle Virtual Write operation
 			elif cmd == 'vw': 
 				pin = int(params.pop(0))
+				
+				if pin == 125 :
+					print('[Blynk->Execute(125)]\t',end='') 
+					ota_lock = core.eeprom.get('OTA_LOCK')
+					if (ota_lock==True and core.cfn_btn.value()==0)or ota_lock==False or ota_lock==None:
+						try :
+							exec(params[0] , globals())
+							print('OK')
+						except Exception as err :
+							print(err)
+							self.log("Can't execute that -> {}".format(err))
+					else :
+						print('[FLAG_OTA_LOCKED]')
+					
+					
 				if pin == 126 :
-					print('['+str(core.Timer.runtime())+'] O
+					print('['+str(core.Timer.runtime())+'] OTA Message Received')
+					core.gc.collect()
+					ota_lock = core.eeprom.get('OTA_LOCK')
+					
+					if (ota_lock == True and core.cfn_btn.value() == 0) or ota_lock == False or ota_lock == None :
+						if core.ota_file == None :
+							core.ota_file = open('temp_code.py','w')
+						if params[1] == "OTA":
+							await core.asyn.Cancellable.cancel_all()
+							await core.cleanup()
+							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n")
+						else :
+							print('PART' , params[1] ,len(params[0]) , end = '')
+							total_part = int(params[1].split('/')[1])
+							curr_part = int(params[1].split('/')[0])
+	

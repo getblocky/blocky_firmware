@@ -1,4 +1,4 @@
-, password = ap_password	)
+sword = ap_password	)
 
 		routeHandlers = [
 			("/", "GET", self._httpHandlerIndexGet),

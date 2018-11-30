@@ -1,76 +1,66 @@
-eadlines() or readline() right
-	# uPython user continuous memory region for readlines() -> MemoryError
-	# uPython readline() use different newline syntax !
-	# uPython's regex use recursive while max stack = 39
-	# Damn right =))
-	
-	list_library = []
-	try :
-		f = open('user_code.py')
-		eof = False
-		while eof == False :
-			line = ''
-			while True :
-				temp = f.read(1)
-				if len(temp) == 0:
-					eof = True
-					break
-				line += temp
-				if temp == '\r' or temp == '\n':
-					break 
-				
-				# Parse line by line :((
-				
-			if line.startswith('from '):
-				library = line.split(' ')[1]
-				if library.startswith('Blocky.'):
-					library = line.split('.')[1].split(' ')[0]
-					
-					try :
-						version = float(line.split('#version=')[1])
-					except :
-						if not library + '.py' in core.os.listdir('Blocky'):
-							if library not in list_library:
-								list_library.append(library)
-							print('Library '+library+' need to be downloaded')
-							continue
-						print('Library '+library+' is kept')
-						continue
-						
-					# Version is known
-					try :
-						l = open('Blocky/'+library+'.py')
-						current_version = ''
-						while True :
-							temp = l.read(1)
-							
-							if temp == '\r' or temp == '\n':
-								try :
-									current_version = float(current_version.split('=')[1])
-								except:
-									current_version = 0.0
-								
-								if current_version < version :
-									print('Library',library,'is outdated',current_version)
-									if library not in list_library:
-										list_library.append(library)
-									
-									print('CurrentVersion=' , current_version)
-								break
-							else :
-								current_version += temp
-								
-							
-						l.close()		
-					except :
-						if library not in list_library:
-							list_library.append(library)
-						print('Library' , library , 'is weird')
-						
-		f.close()		
+.get_list_library('user_code.py')
+	list_library_update = []
+	for x in list_library:
+		print('[library] -> checking {}'.format(x) , end = '')
+		current_version = core.get_library_version(x[0])
+		if current_version == None or current_version < x[1] :
+			list_library_update.append(x[0])
+			print(False)
+		else :
+			print(True)
+			
+	if len(list_library_update):
+		core.eeprom.set('LIB',list_library_update)
+		core.machine.reset()
 		
-		if len(list_library):
-			if core.eeprom.get('LIB') == None :
-				core.eeprom.set('LIB' , list_library)
-				print("[LIBRARY_UPDATE]")
-				core.
+	try :
+		wdt_timer.init(mode=core.machine.Timer.PERIODIC,period=20000,callback = _failsafe)
+	except :
+		pass
+	try :
+		del core.sys.modules['user_code']
+	except :
+		pass
+	core.gc.collect()
+	print('[user_code] -> started with {} heap'.format(core.gc.mem_free()))
+	try :
+		core.user_code = __import__('user_code')
+	except RuntimeError:
+		del core.sys.modules['user_code']
+		while not core.wifi.wlan_sta.isconnected() or core.flag.blynk == False:
+			await core.asyncio.sleep_ms(500)
+		core.mainthread.create_task(run_user_code(True))
+		return
+	except MemoryError:
+		del core.sys.modules['user_code']
+		print('[memory] -> removing user code')
+		try :
+			os.rename('user_code.py','temp_code.py')
+		except :
+			pass
+		f = open('last_word.py','w')
+		f.write('[warning] -> your code has been deleted because it use so much memory')
+		f.close()
+		for x in range(20):
+			core.indicator.rgb.fill((255,0,0));core.indicator.rgb.write();sleep_ms(50)
+			core.indicator.rgb.fill((0,0,0));core.indicator.rgb.write();sleep_ms(50)
+		core.machine.reset()
+	
+async def send_last_word():
+	if "last_word.py" in core.os.listdir():
+		while not core.flag.wifi:
+			await core.asyncio.sleep_ms(500)
+		try :
+			print('[lastword] -> {}'.format(open('last_word.py').read()))
+			core.blynk.log(127,open('last_word.py').read(),http=True)
+		except :
+			pass
+		core.os.remove('last_word.py')
+
+async def main(online=False):
+	if not core.cfn_btn.value():
+		time = core.time.ticks_ms()
+		print('Configure: ',end='')
+		while not core.cfn_btn.value():
+			core.time.sleep_ms(500)
+			temp = ( core.time.ticks_ms() 

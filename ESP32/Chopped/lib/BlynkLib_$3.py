@@ -1,20 +1,4 @@
-ormat(pin,self.message,type(self.message) ) )
-					if core.flag.duplicate == False :
-						await core.call_once('user_blynk_{}'.format(pin) , self._vr_pins_write[pin])
-					else :
-						core.mainthread.call_soon(core.asyn.Cancellable(self._vr_pins_write[pin])())
-						
-					await core.asyncio.sleep_ms(50) #Asyncio will focus on the handling
-			# Handle Virtual Read operation
-			elif cmd == 'vr':
-				pin = int(params.pop(0))
-				if pin in self._vr_pins and self._vr_pins[pin].read:
-					self._vr_pins[pin].read()
-			else:
-				print('UNKNOWN' , params)
-				return 
-				#raise ValueError("Unknown message cmd: %s" % cmd)
-		except Exception as err :
+ Exception as err :
 			import sys
 			print('BlynkHandler ->')
 			sys.print_exception(err)
@@ -71,4 +55,24 @@ ormat(pin,self.message,type(self.message) ) )
 		self.state = DISCONNECTED
 		time.sleep(RECONNECT_DELAY)
 		if emsg:
-			print('Error: 
+			print('Error: %s, connection closed' % emsg)
+
+	def _server_alive(self):
+		c_time = int(time.time())
+		if self._m_time != c_time:
+			self._m_time = c_time
+			self._tx_count = 0
+			if self._last_hb_id != 0 and c_time - self._hb_time >= MAX_SOCK_TO:
+				return False
+			if c_time - self._hb_time >= HB_PERIOD and self.state == AUTHENTICATED:
+				self._hb_time = c_time
+				self._last_hb_id = self._new_msg_id()
+				self._send(struct.pack(HDR_FMT, MSG_PING, self._last_hb_id, 0), True)
+		return True
+
+	def repl(self, pin):
+		repl = Terminal(self, pin)
+		self.add_virtual_pin(pin, repl.virtual_read, repl.virtual_write)
+		return repl
+
+	def notify(se

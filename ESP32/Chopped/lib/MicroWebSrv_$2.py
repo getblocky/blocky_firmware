@@ -1,4 +1,4 @@
-meTypeFromFilename(self, filename) :
+MimeTypeFromFilename(self, filename) :
 		filename = filename.lower()
 		for ext in self._mimeTypes :
 			if filename.endswith(ext) :
@@ -65,4 +65,4 @@ meTypeFromFilename(self, filename) :
 							else :
 								response.WriteResponseMethodNotAllowed()
 						elif upg == 'websocket' and 'MicroWebSocket' in globals() \
-							 
+						

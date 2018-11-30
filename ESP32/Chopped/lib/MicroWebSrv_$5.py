@@ -1,4 +1,4 @@
-
+rstLine(101)
 			self._writeHeader("Connection", "Upgrade")
 			self._writeHeader("Upgrade",	upgrade)
 			if isinstance(headers, dict) :
@@ -35,6 +35,7 @@
 				
 				if contentLength > 0 :
 					self._write(content)
+				
 				return True
 			except MemoryError as err:
 				print('mwsr->wR',err)
@@ -58,4 +59,4 @@
 											'message' : responseCode[1]
 									   } )
 		
-		def WriteResponseJSONError(self, 
+		def WriteRespons

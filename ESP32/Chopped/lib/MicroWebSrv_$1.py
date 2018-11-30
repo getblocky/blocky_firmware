@@ -45,7 +45,7 @@
 	async def Start(self, threaded=True) :
 		if not self._started :
 			reset_timer = core.machine.Timer(1)
-			reset_timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1800000,callback =lambda t:core.machine.reset)
+			reset_timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1800000,callback =lambda t:core.machine.reset())
 			self._socket = core.socket.socket( core.socket.AF_INET,
 										  core.socket.SOCK_STREAM,
 										  core.socket.IPPROTO_TCP )
@@ -68,4 +68,4 @@
 	def SetNotFoundPageUrl(self, url=None) :
 		self._notFoundUrl = url
 
-	def GetMi
+	def Get

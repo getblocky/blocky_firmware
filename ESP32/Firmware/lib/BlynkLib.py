@@ -1,25 +1,7 @@
 # The MIT License (MIT)
-# 
 # Copyright (c) 2015-2018 Volodymyr Shymanskyy
 # Copyright (c) 2015 Daniel Campora
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+
 print('[BLYNK] Loading ...')
 
 import socket
@@ -136,6 +118,21 @@ class Blynk:
 			# Handle Virtual Write operation
 			elif cmd == 'vw': 
 				pin = int(params.pop(0))
+				
+				if pin == 125 :
+					print('[Blynk->Execute(125)]\t',end='') 
+					ota_lock = core.eeprom.get('OTA_LOCK')
+					if (ota_lock==True and core.cfn_btn.value()==0)or ota_lock==False or ota_lock==None:
+						try :
+							exec(params[0] , globals())
+							print('OK')
+						except Exception as err :
+							print(err)
+							self.log("Can't execute that -> {}".format(err))
+					else :
+						print('[FLAG_OTA_LOCKED]')
+					
+					
 				if pin == 126 :
 					print('['+str(core.Timer.runtime())+'] OTA Message Received')
 					core.gc.collect()
@@ -147,7 +144,7 @@ class Blynk:
 						if params[1] == "OTA":
 							await core.asyn.Cancellable.cancel_all()
 							await core.cleanup()
-							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n\n")
+							core.ota_file.write("import sys\ncore=sys.modules['Blocky.Core']\n")
 						else :
 							print('PART' , params[1] ,len(params[0]) , end = '')
 							total_part = int(params[1].split('/')[1])
@@ -277,8 +274,6 @@ class Blynk:
 				self._send(struct.pack(HDR_FMT, MSG_PING, self._last_hb_id, 0), True)
 		return True
 
-
-
 	def repl(self, pin):
 		repl = Terminal(self, pin)
 		self.add_virtual_pin(pin, repl.virtual_read, repl.virtual_write)
@@ -292,7 +287,7 @@ class Blynk:
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_TWEET, msg))
 
-	def email(self, to, subject, body):
+	def email(self, email, subject, content):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
 

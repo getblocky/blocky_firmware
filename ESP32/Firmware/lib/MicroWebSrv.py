@@ -137,7 +137,7 @@ class MicroWebSrv :
 	async def Start(self, threaded=True) :
 		if not self._started :
 			reset_timer = core.machine.Timer(1)
-			reset_timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1800000,callback =lambda t:core.machine.reset)
+			reset_timer.init(mode=core.machine.Timer.ONE_SHOT,period = 1800000,callback =lambda t:core.machine.reset())
 			self._socket = core.socket.socket( core.socket.AF_INET,
 										  core.socket.SOCK_STREAM,
 										  core.socket.IPPROTO_TCP )
@@ -325,11 +325,13 @@ class MicroWebSrv :
 		
 		def _write(self, data) :
 			try :
+				
 				if isinstance(data , str):
 					return self._client._socket.write(data)
 				elif isinstance(data , list):
 					for x in data :
 						self._client._socket.write(x)
+				
 			except Exception as err:
 				print('socket->_write->' , err)
 		
@@ -393,6 +395,7 @@ class MicroWebSrv :
 				
 				if contentLength > 0 :
 					self._write(content)
+				
 				return True
 			except MemoryError as err:
 				print('mwsr->wR',err)

@@ -1,6 +1,4 @@
-ient, httpResponse):
-		request_json  = ''
-		request_json = core.json.loads(httpClient.ReadRequestContent().decode('ascii'))
+equest_json = core.json.loads(httpClient.ReadRequestContent().decode('ascii'))
 		self.wifi_status = 0
 		httpResponse.WriteResponseOk(headers = None,contentType= "text/html",	contentCharset = "UTF-8",content = 'OK')
 		self.wlan_sta.connect(request_json['ssid'], request_json['password'])
@@ -55,3 +53,6 @@ ient, httpResponse):
 		raw = self.wlan_sta.scan()
 		for nw in raw:
 			networks.append({'ssid': nw[0].decode('ascii'), 'rssi': nw[3]})
+		
+		content = core.json.dumps(networks)
+		p

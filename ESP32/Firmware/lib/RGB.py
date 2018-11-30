@@ -9,31 +9,27 @@ class RGB:
 		if self.p[0] == None :
 			return 
 		self.rgb = NeoPixel(Pin(self.p[0]) , num , timing = True)
-		self.tar = list(self.rgb)
-	def color(self , led = None, color = None):
-		if isinstance(led,int) and color == None :
-			if led > len(self.rgb.buf)//3 :
-				return None 
-			return self.rgb[led]
-		if isinstance(color,str):
-			color = color.lstrip('#')
-			color = tuple(max(0,min(255,int(color[i:i+2], 16))) for i in (0, 2 ,4))
-		try:
-			if isinstance(led , list):
-				for i in range(0,len(led)):
-					self.rgb[led[i]-1] = color
-				self.rgb.write()
-			elif isinstance(led , tuple):
-				for i in range(led[0] -1, led[1]):
-					self.rgb[i] = color 
-				self.rgb.write()
-					
-		except IndexError as err :
+
+	def colour(self,start,stop,colour,update=True):
+		if start > stop :
+			return
+		if isinstance(colour,str):
+			colour = colour.lstrip('#')
+			colour = tuple(max(0,min(255,int(colour[i:i+2], 16))) for i in (0, 2 ,4))
+		elif isinstance(colour,list):
+			if len(list) < 3 :
+				return
+		else :
+			return
+		
+		if start > len(self.rgb) or stop > len(self.rgb):
 			temp = list(self.rgb)
-			self.rgb = NeoPixel(Pin(self.p[0]) , max(led) , timing = True)
+			self.rgb = NeoPixel(Pin(self.p[0]) , max(start,stop) , timing = True)
 			for x in range(len(temp)):
 				self.rgb[x] = temp[x]
 				
-			self.color( led,color)
-
-class 
+		for x in range(start,stop+1):
+			self.rgb[x-1] = colour
+			
+		if update == True:
+			self.rgb.write()

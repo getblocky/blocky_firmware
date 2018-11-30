@@ -1,21 +1,4 @@
-ed():
-			self.last_call = core.Timer.runtime()
-			await core.asyncio.sleep_ms(500)
-		while True:
-			self.last_call = core.Timer.runtime()
-			while self.state != AUTHENTICATED:
-				self.last_call = core.Timer.runtime()
-				if self._do_connect:
-					await core.asyncio.sleep_ms(100) # Delay in every retry
-					core.gc.collect() 
-					try:
-						core.indicator.animate('blynk-connecting')
-						self.state = CONNECTING
-						if self._ssl:
-							import ssl
-							print('SSL: Connecting to %s:%d' % (self._server, self._port))
-							ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
-							self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
+ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
 						else:
 							print('TCP: Connecting to %s:%d' % (self._server, self._port))
 							self.conn = socket.socket()
@@ -52,4 +35,17 @@ ed():
 						self._close('Blynk authentication failed')
 						core.indicator.animate('blynk-failed')
 						continue
-					await core.indicator.show('blynk-au
+					await core.indicator.show('blynk-authenticated')
+					self.state = AUTHENTICATED
+					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
+					print("[BLYNK] Happy Blynking ! ")
+					for x in range(5):
+						core.indicator.rgb.fill((0,x*8,0))
+						core.indicator.rgb.write()
+						await core.asyncio.sleep_ms(10)
+					for x in range(5,-1,-1):
+						core.indicator.rgb.fill((0,x*8,0))
+						core.indicator.rgb.write()
+						await core.asyncio.sleep_ms(10)
+					core.flag.blynk = True
+					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "co

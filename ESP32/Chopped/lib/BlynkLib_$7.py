@@ -1,17 +1,4 @@
-thenticated')
-					self.state = AUTHENTICATED
-					self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py',open('Blocky/fuse.py').read()))
-					print("[BLYNK] Happy Blynking ! ")
-					for x in range(5):
-						core.indicator.rgb.fill((0,x*8,0))
-						core.indicator.rgb.write()
-						await core.asyncio.sleep_ms(10)
-					for x in range(5,-1,-1):
-						core.indicator.rgb.fill((0,x*8,0))
-						core.indicator.rgb.write()
-						await core.asyncio.sleep_ms(10)
-					core.flag.blynk = True
-					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
+nfig" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					#self.virtual_write(128 ,  {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					core.wifi.wifi_list  = None
 				else:
@@ -48,3 +35,26 @@ thenticated')
 						print('Internal')
 						continue
 					else:
+						self._close('unknown message type %d' % msg_type)
+						continue
+				else:
+					await core.asyncio.sleep_ms(1)
+					#self._start_time = sleep_from_until(self._start_time, IDLE_TIME_MS)
+				if not self._server_alive():
+					self._close('Blynk server is offline')
+					print('BlynkServer->DEAD')
+					core.flag.blynk = False
+					await core.indicator.show('blynk-authenticating')
+					return
+				else :
+					core.flag.blynk = True
+					
+				
+				await core.asyncio.sleep_ms(1)
+				
+			if not self._do_connect or not core.flag.blynk:
+				self._close()
+				print('Blynk disconnection requested by the user')
+				break
+			
+		

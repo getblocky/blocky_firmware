@@ -6,17 +6,18 @@ wifi_list = None
 connected = False
 
 wlan_sta  = core.network.WLAN(core.network.STA_IF)
-wlan_sta.active(True)
+
 
 async def connect(ap=None):
 	print('[WIFI] -> Connecting')
 	await core.indicator.show('wifi-connecting')
+	wlan_sta.active(True)
 	if ap == None :
 		while not wlan_sta.isconnected() :
 			await core.asyncio.sleep_ms(100)
 			
 	else :
-		core.mainthread.call_soon(core.indicator.heartbeat( (0,50,50) , 1 , wlan_sta.isconnected ))
+		#core.mainthread.call_soon(core.indicator.heartbeat( (0,50,50) , 1 , wlan_sta.isconnected ))
 		while not wlan_sta.isconnected():
 			
 			l = []

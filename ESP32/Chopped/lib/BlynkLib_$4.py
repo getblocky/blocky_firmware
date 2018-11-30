@@ -1,26 +1,4 @@
-%s, connection closed' % emsg)
-
-	def _server_alive(self):
-		c_time = int(time.time())
-		if self._m_time != c_time:
-			self._m_time = c_time
-			self._tx_count = 0
-			if self._last_hb_id != 0 and c_time - self._hb_time >= MAX_SOCK_TO:
-				return False
-			if c_time - self._hb_time >= HB_PERIOD and self.state == AUTHENTICATED:
-				self._hb_time = c_time
-				self._last_hb_id = self._new_msg_id()
-				self._send(struct.pack(HDR_FMT, MSG_PING, self._last_hb_id, 0), True)
-		return True
-
-
-
-	def repl(self, pin):
-		repl = Terminal(self, pin)
-		self.add_virtual_pin(pin, repl.virtual_read, repl.virtual_write)
-		return repl
-
-	def notify(self, msg):
+lf, msg):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_NOTIFY, msg))
 
@@ -28,7 +6,7 @@
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_TWEET, msg))
 
-	def email(self, to, subject, body):
+	def email(self, email, subject, content):
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_EMAIL, to, subject, body))
 
@@ -51,4 +29,24 @@
 					self._send(self._format_msg(MSG_HW, 'vw', pin, val))
 				else :
 					self._send(self._format_msg(MSG_BRIDGE ,100, 'i' , device)) # Set channel V100 of this node to point to that device
-					self._send(self._format_msg(MSG_BRIDGE, 100,'vw',  pin ,
+					self._send(self._format_msg(MSG_BRIDGE, 100,'vw',  pin , val))
+	def set_property(self, pin, prop, val):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
+
+	def log_event(self, event, descr=None):
+		if self.state == AUTHENTICATED:
+			if descr==None:
+				self._send(self._format_msg(MSG_EVENT_LOG, event))
+			else:
+				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
+	def log(self,message , http = False):
+		self.virtual_write(127,message,http=http)
+		
+	def sync_all(self):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_HW_SYNC))
+
+	def sync_virtual(self, pin):
+		if self.state == AUTHENTICATED:
+			self._s

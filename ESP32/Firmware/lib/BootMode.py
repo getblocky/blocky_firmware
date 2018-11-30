@@ -8,14 +8,13 @@ class BootMode :
 		self.wlan_sta =  core.network.WLAN(core.network.STA_IF)
 		self.status = 'start'
 		self.content = ''
-	
 	async def connect(self, ssid, password):
 		self.wlan_sta.active(True)
 		self.wlan_sta.connect(ssid, password)
 		
 		print('Connecting to wifi')
 		#indicator.animate('pulse',(100,50,0),10)
-		while not self.wlan_sta.isconnected() | (a > 99) :
+		while not self.wlan_sta.isconnected()  :
 			await core.asyncio.sleep_ms(100)
 			a+=1
 			print('.', end='')
@@ -34,19 +33,17 @@ class BootMode :
 	def _httpHandlerIndexGet(self, httpClient, httpResponse):
 		print('Get index request , memoryview' )
 		# Heap fragmentation is our enemy
+		f = open('Blocky/index.html')
+		print('[bootmode] -> writing index request ',end='')
 		content = []
-		with open('Blocky/index.html') as f :
-			while True :
-				try :
-					temp = f.read(100)
-					if len(temp) == 0 : 
-						break
-					content.append(temp)
-				except :
-					print(len(content))
-		print('Content = ' , len(content) , end = '')
+		f = open('Blocky/index.html')
+		while True:
+			temp = f.read(500)
+			if len(temp) == 0:
+				break
+			content.append(temp)
+		f.close()
 		httpResponse.WriteResponseOk( headers = None,contentType= "text/html",	contentCharset = "UTF-8",	content = content) 
-		print('Done')
 		
 		
 	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
@@ -158,15 +155,17 @@ class BootMode :
 		# Try to make an color indicator for which is which 
 		# Blocky that shine red will be 'Blocky RED <uuid>'
 		color = []
-		if max_index == 0 : color = ['red',(255,59,48)]
-		if max_index == 1 : color = ['green',(76,217,100)]
-		if max_index == 2 : color = ['blue',(0,122,255)]
-		if max_index == 3 : color = ['pink',(255,45,85)]
-		if max_index == 4 : color = ['purple',(88,86,214)]
-		if max_index == 5 : color = ['yello',(255,204,0)]
-			
+		n=5
+		if max_index == 0 : color = ['red',(255//n,59//n,48//n)]
+		if max_index == 1 : color = ['green',(76//n,217//n,100//n)]
+		if max_index == 2 : color = ['blue',(0,122//n,255//n)]
+		if max_index == 3 : color = ['pink',(255//n,45//n,85//n)]
+		if max_index == 4 : color = ['purple',(88//n,86//n,214//n)]
+		if max_index == 5 : color = ['yello',(255//n,204//n,0)]
+		
+		core.indicator.rgb.fill(color[1]);core.indicator.rgb.write()
 		if core.eeprom.get('first_start') == 1:
-			core.mainthread.create_task(core.indicator.rainbow(core.flag.ONLINE,100,1) )# when Blocky.Global.flag_ONLINE is True , it stop
+			# when Blocky.Global.flag_ONLINE is True , it stop
 			ap_name = "It's me , your " + color[0].upper() + ' Blocky'
 		else :
 			core.mainthread.create_task(core.indicator.heartbeat( color[1] , 1 ,core.flag.wifi , 5) )

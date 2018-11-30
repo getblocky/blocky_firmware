@@ -8,14 +8,13 @@ class BootMode :
 		self.wlan_sta =  core.network.WLAN(core.network.STA_IF)
 		self.status = 'start'
 		self.content = ''
-	
 	async def connect(self, ssid, password):
 		self.wlan_sta.active(True)
 		self.wlan_sta.connect(ssid, password)
 		
 		print('Connecting to wifi')
 		#indicator.animate('pulse',(100,50,0),10)
-		while not self.wlan_sta.isconnected() | (a > 99) :
+		while not self.wlan_sta.isconnected()  :
 			await core.asyncio.sleep_ms(100)
 			a+=1
 			print('.', end='')
@@ -34,19 +33,17 @@ class BootMode :
 	def _httpHandlerIndexGet(self, httpClient, httpResponse):
 		print('Get index request , memoryview' )
 		# Heap fragmentation is our enemy
+		f = open('Blocky/index.html')
+		print('[bootmode] -> writing index request ',end='')
 		content = []
-		with open('Blocky/index.html') as f :
-			while True :
-				try :
-					temp = f.read(100)
-					if len(temp) == 0 : 
-						break
-					content.append(temp)
-				except :
-					print(len(content))
-		print('Content = ' , len(content) , end = '')
+		f = open('Blocky/index.html')
+		while True:
+			temp = f.read(500)
+			if len(temp) == 0:
+				break
+			content.append(temp)
+		f.close()
 		httpResponse.WriteResponseOk( headers = None,contentType= "text/html",	contentCharset = "UTF-8",	content = content) 
-		print('Done')
 		
 		
 	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
@@ -71,4 +68,6 @@ class BootMode :
 			machine.reset()
 		"""
 
-	def _httpHandlerSaveConfig(self, httpCl
+	def _httpHandlerSaveConfig(self, httpClient, httpResponse):
+		request_json  = ''
+		r

@@ -9,9 +9,6 @@ _running (name):
 	else :
 		print('[CANCEL] {}'.format(name))
 	
-	
-	
-
 def download(filename , path):
 	response = None
 	gc.collect()
@@ -48,3 +45,27 @@ def download(filename , path):
 	
 	del response
 	gc.collect()
+	
+def get_list_library(file):
+	f = open(file)
+	cell = ''
+	while True :
+		cell += f.read(1)
+		if cell[-2:] == '\n\n':
+			break
+	cell = cell.split('\n')
+	r = []
+	for line in cell :
+		library = ''
+		version = 0.0
+		#from Blocky.STH import * #version=1.0
+		if line.startswith('from '):
+			library = line.split('.')[1].split(' ')[0]
+			if '#version' in line :
+				version = float(line.split('=')[1])
+			r.append([library,version])
+	f.close()
+	return r
+	
+def get_library_version(lib):
+	if '{}.py'.format(lib) not in os.listdir('Bloc

@@ -1,4 +1,4 @@
-code, obj=None) :
+eJSONError(self, code, obj=None) :
 			return self.WriteResponse( code,
 									   None,
 									   "application/json",
