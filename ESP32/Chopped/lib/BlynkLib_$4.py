@@ -1,4 +1,4 @@
-lf, msg):
+:
 		if self.state == AUTHENTICATED:
 			self._send(self._format_msg(MSG_NOTIFY, msg))
 
@@ -41,12 +41,9 @@ lf, msg):
 			else:
 				self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
 	def log(self,message , http = False):
-		self.virtual_write(127,message,http=http)
+		#self.virtual_write(127,message,http=http)
+		self.virtual_write(device = self._token.decode('utf-8') , pin = 127 , val = message )
 		
 	def sync_all(self):
 		if self.state == AUTHENTICATED:
-			self._send(self._format_msg(MSG_HW_SYNC))
-
-	def sync_virtual(self, pin):
-		if self.state == AUTHENTICATED:
-			self._s
+			self._send(self._format_msg(MSG_HW_S

@@ -1,4 +1,5 @@
- Exception as err :
+e cmd: %s" % cmd)
+		except Exception as err :
 			import sys
 			print('BlynkHandler ->')
 			sys.print_exception(err)
@@ -44,12 +45,11 @@
 					
 					if er.args[0] != errno.EAGAIN:
 						core.flag.blynk = False
-						print('BlynkSend->EAGAIN')
 						#raise Dont raise , flag instead
 							
 					else:
 						time.sleep_ms(RE_TX_DELAY)
-						retries += 1
+					retries += 1
 	def _close(self, emsg=None):
 		self.conn.close()
 		self.state = DISCONNECTED
@@ -75,4 +75,4 @@
 		self.add_virtual_pin(pin, repl.virtual_read, repl.virtual_write)
 		return repl
 
-	def notify(se
+	def notify(self, msg)

@@ -1,4 +1,41 @@
-ementsByName("deviceName")[0].style.display="none";document.getElementById("submit").style.display="none"}else{if(this.responseText=="Failed"){clearInterval(checkStatusTimer);document.getElementById("form").disabled=false;document.getElementById("loaderDiv").style.visibility="hidden";document.getElementById("loaderLabel").innerText="Failed to connect. Try again please."}}}};a.open("GET","/status",true);a.send()}function save(){document.getElementById("form").disabled=false;document.getElementById("loaderDiv").style.visibility="visible";document.getElementById("loaderLabel").innerText="Connecting to the selected WIFI network";var a=new XMLHttpRequest();a.onreadystatechange=function(){if(this.readyState==4&&this.status==200){checkStatusTimer=setInterval(checkStatus,1000)}};a.open("POST","/save",true);a.setRequestHeader("Content-Type","application/json;charset=UTF-8");a.send(JSON.stringify({ssid:document.getElementsByName("ssid")[0].value,password:document.getElementsByName("password")[0].value,token:document.getElementsByName("token")[0].value,deviceName:document.getElementsByName("deviceName")[0].value}))};</script>
+id")[0].style.display = "none";
+					document.getElementsByName("password")[0].style.display = "none";
+					document.getElementsByName("token")[0].style.display = "none";
+					document.getElementById("submit").style.display = "none"
+				} else {
+					if (this.responseText == "Failed") {
+						clearInterval(checkStatusTimer);
+						document.getElementById("form").disabled = false;
+						document.getElementById("loaderDiv").style.visibility = "hidden";
+						document.getElementById("loaderLabel").innerText = "Failed to connect. Try again please."
+					}
+				}
+			}
+		};
+		a.open("GET", "/status", true);
+		a.send()
+	}
+
+	function save() {
+		document.getElementById("form").disabled = false;
+		document.getElementById("loaderDiv").style.visibility = "visible";
+		document.getElementById("loaderLabel").innerText = "Connecting to the selected WIFI network";
+		var a = new XMLHttpRequest();
+		a.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				checkStatusTimer = setInterval(checkStatus, 1000)
+			}
+		};
+		a.open("POST", "/save", true);
+		a.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		a.send(JSON.stringify({
+			ssid: document.getElementsByName("ssid")[0].value,
+			password: document.getElementsByName("password")[0].value,
+			token: document.getElementsByName("token")[0].value,
+		}))
+	};
+
+</script>
 </head>
 <body onload=loadAPs()>
 <div>
@@ -11,7 +48,6 @@ ementsByName("deviceName")[0].style.display="none";document.getElementById("subm
 </select>
 <input type=password name=password placeholder=Password />
 <input type=text autocorrect=off autocapitalize=none name=token placeholder='Authentication Key' />
-<input type=text autocorrect=off autocapitalize=none name=deviceName placeholder='Set name for this Blocky' />
 <input type=button id=submit class='submit action-button' value=Submit onclick=save() />
 </fieldset>
 </form>

@@ -1,59 +1,57 @@
 #version=1.0
-import sys
+
+import sys 
 core = sys.modules['Blocky.Core']
 
-class Sound:
-	def __init__(self,port,limit = 500, sensitive = 3):
-		self.p = core.getPort(port)
-		if self.p[2] == None :
-			return 
-		
-		self.adc = core.machine.ADC(core.machine.Pin(self.p[2]))
-		self.adc.atten(core.machine.ADC.ATTN_11DB)
-		self.count = 0
-		self.limit = limit
-		self.his = [0,0,0]
-		self.curr = 0
-		self.last = core.time.ticks_ms()
-		self.cb = []
-		self.callback = [None,None]
-		core.mainthread.create_task(core.asyn.Cancellable(self.handler)())
-	@core.asyn.cancellable
-	async def handler(self):
-		while True :
-			await core.asyncio.sleep_ms(10)
-			self.curr = self.adc.read()
-			self.his.pop(0)
-			self.his.append(self.curr)
-			if self.curr > self.limit:
-				self.last = ticks_ms()
-			if self.his[1] - self.his[0] > 0 and self.his[1] - self.his[2] > 0 and self.his[1] > self.limit :
-				self.count += 1
-				 
-			if ticks_ms() - self.last > 500 and self.count > 0:
-				for x in self.cb:
-					if x[0] == 'clap' and x[1] == self.count:
-						try :
-							if x[3] == 'g':
-								core.mainthread.create_task(core.asyn.Cancellable(x[2])())
-							if x[3] == 'f':
-								x[2]()
-						except Exception as err:
-							print('sound-event->',err)
-				if self.callback[0] != None :
-					if self.callback[1] == 'g':
-						core.mainthread.create_task(core.mainthread.Cancellable(self.callback[0])(self.count))
-					if self.callback[1] == 'f':
-						self.callback[0](self.count)
-						
-				self.count = 0
-				self.prev = 0
-	def event(self , type , time, function):
-		if not callable(function):
-			return 
-		if time == 'all':
-			self.callback = [function,'g' if str(function).find('generator') >0 else 'f']
-		else :
-			self.cb.append(['clap' ,time , function,'g' if str(function).find('generator') >0 else 'f'])
-		
 
+class Sound:
+	def __init__(self , port):
+		self.p = core.getPort(port)
+		if self.p[1] == None :
+			return 
+		self.last_time = core.Timer.runtime()
+		self.last_state = 0
+		self.number = 0
+		self.SoundTaskList = {}
+		self.his = []
+		self.button = core.machine.Pin(self.p[1] , core.machine.Pin.IN , core.machine.Pin.PULL_UP)
+		self.button.irq(trigger = core.machine.Pin.IRQ_FALLING , handler = self._handler)
+		core.mainthread.create_task(core.asyn.Cancellable(self._async_handler)())
+		
+	def event(self , type , time , function):
+		function_name = str(type) + str(time)
+		if not callable(function) :
+			print('clap-event->Function cant be call')
+			return 
+		self.SoundTaskList[function_name] = function
+		
+	def _handler(self,source):
+		now = core.Timer.runtime()
+		if  (len(self.his) > 2 and state == 1 and now - self.his[-1] < 300):
+			return 
+		self.his.append(core.Timer.runtime())
+			
+	@core.asyn.cancellable		
+	async def _async_handler (self):
+		while True :
+			await core.asyncio.sleep_ms(500)
+			if self.button.value() == 1 and len(self.his) > 0 and core.Timer.runtime() - self.his[-1] > 500:
+					print('clap ' , len(self.his))
+					core.mainthread.call_soon(self.execute('clap' ,len(self.his) ))
+					self.his.clear()
+					
+	async def execute(self,type,time):
+		try :
+			function = self.SoundTaskList.get( str(type) + str(time) )
+			if function == None :
+				raise Exception
+				
+			if core.flag.duplicate == False :
+				await core.call_once('user_button_{}{}'.format(type,time) , function)
+			else:
+				core.mainthread.create_task(core.asyn.Cancellable(function)())
+				
+		except Exception as err:
+			print('clap-exec->' , err)
+			pass
+			

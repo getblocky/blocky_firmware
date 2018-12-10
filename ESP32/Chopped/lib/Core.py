@@ -13,7 +13,7 @@ ota_file = None
 deinit_list = []
 alarm_list = []
 user_namedtask = []
-
+wdt_timer = None
 import time
 import machine
 import neopixel
@@ -85,4 +85,4 @@ async def call_once(name,function):
 	if name in asyn.NamedTask.instances:
 		if asyn.NamedTask.is_running(name):
 			await asyn.NamedTask.cancel ( name )
-			while asyn.NamedTask.is
+			while a

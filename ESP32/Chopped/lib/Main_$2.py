@@ -1,4 +1,4 @@
-- time ) //1000
+0
 			if temp > 0 and temp < 5 :
 				core.indicator.rgb.fill((0,25,0));core.indicator.rgb.write()
 			if temp > 5 and temp < 10 :
@@ -55,4 +55,5 @@
 	core.mainthread.create_task(run_user_code())
 	core.mainthread.create_task(core.Timer.alarm_service())
 	while True :
-		await core.asyncio.s
+		await core.asyncio.sleep_ms(500)
+	

@@ -1,4 +1,4 @@
-_running (name):
+syn.NamedTask.is_running (name):
 				await asyncio.sleep_ms(10)
 	#mainthread.call_soon(asyn.NamedTask(name,function))
 	if function != None :
@@ -25,7 +25,7 @@ def download(filename , path):
 				response = None
 				gc.collect()
 				try :
-					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/{}_${}.{}'.format(filename.split('.')[0] , piece , filename.split('.')[1]))   
+					response = urequests.get('https://raw.githubusercontent.com/getblocky/dot_firmware/master/ota/{}_${}.{}'.format(filename.split('.')[0] , piece , filename.split('.')[1]))   
 					if response.status_code == 200 :
 						f.write(response.content)
 						print('#' , end = '')
@@ -68,4 +68,4 @@ def get_list_library(file):
 	return r
 	
 def get_library_version(lib):
-	if '{}.py'.format(lib) not in os.listdir('Bloc
+	if '{}.py'.format(lib) not in os.listdir('Block

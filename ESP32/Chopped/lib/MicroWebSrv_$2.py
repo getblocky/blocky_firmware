@@ -1,4 +1,7 @@
-MimeTypeFromFilename(self, filename) :
+def SetNotFoundPageUrl(self, url=None) :
+		self._notFoundUrl = url
+
+	def GetMimeTypeFromFilename(self, filename) :
 		filename = filename.lower()
 		for ext in self._mimeTypes :
 			if filename.endswith(ext) :
@@ -11,9 +14,9 @@ MimeTypeFromFilename(self, filename) :
 			method = method.upper()
 			for route in self._routeHandlers :
 				if len(route) == 3 and			\
-				   route[0].upper() == resUrl and \
-				   route[1].upper() == method :
-				   return route[2]
+					 route[0].upper() == resUrl and \
+					 route[1].upper() == method :
+					 return route[2]
 		return None
 
 	def _physPathFromURLPath(self, urlPath) :
@@ -28,23 +31,23 @@ MimeTypeFromFilename(self, filename) :
 				return physPath
 		return None
 	
-	# ===( Class Client  )========================================================
+	# ===( Class Client	)========================================================
 	
 	class _client :
 		
 		def __init__(self, microWebSrv, socket, addr) :
 			socket.settimeout(2)
-			self._microWebSrv   = microWebSrv
+			self._microWebSrv	 = microWebSrv
 			self._socket		= socket
-			self._addr		  = addr
+			self._addr			= addr
 			self._method		= None
-			self._path		  = None
-			self._httpVer	   = None
-			self._resPath	   = "/"
-			self._queryString   = ""
-			self._queryParams   = { }
-			self._headers	   = { }
-			self._contentType   = None
+			self._path			= None
+			self._httpVer		 = None
+			self._resPath		 = "/"
+			self._queryString	 = ""
+			self._queryParams	 = { }
+			self._headers		 = { }
+			self._contentType	 = None
 			self._contentLength = 0
 			#await self._processRequest()
 		
@@ -64,5 +67,4 @@ MimeTypeFromFilename(self, filename) :
 							
 							else :
 								response.WriteResponseMethodNotAllowed()
-						elif upg == 'websocket' and 'MicroWebSocket' in globals() \
-						
+						eli

@@ -1,9 +1,25 @@
-eJSONError(self, code, obj=None) :
+lf.WriteResponse(200, headers, contentType, contentCharset, content)
+		
+
+
+		def WriteResponseError(self, code) :
+			responseCode = self._responseCodes.get(code, ('Unknown reason', ''))
 			return self.WriteResponse( code,
-									   None,
-									   "application/json",
-									   "UTF-8",
-									   dumps(obj if obj else { }) )
+										 None,
+										 "text/html",
+										 "UTF-8",
+										 self._errCtnTmpl % {
+											'code'	: code,
+											'reason'	: responseCode[0],
+											'message' : responseCode[1]
+										 } )
+		
+		def WriteResponseJSONError(self, code, obj=None) :
+			return self.WriteResponse( code,
+										 None,
+										 "application/json",
+										 "UTF-8",
+										 dumps(obj if obj else { }) )
 		
 		def WriteResponseBadRequest(self) :
 			return self.WriteResponseError(400)

@@ -52,7 +52,7 @@ async def send_last_word():
 			await core.asyncio.sleep_ms(500)
 		try :
 			print('[lastword] -> {}'.format(open('last_word.py').read()))
-			core.blynk.log(127,open('last_word.py').read(),http=True)
+			core.blynk.log(open('last_word.py').read())
 		except :
 			pass
 		core.os.remove('last_word.py')
@@ -63,4 +63,4 @@ async def main(online=False):
 		print('Configure: ',end='')
 		while not core.cfn_btn.value():
 			core.time.sleep_ms(500)
-			temp = ( core.time.ticks_ms() 
+			temp = ( core.time.ticks_ms() - time ) //100

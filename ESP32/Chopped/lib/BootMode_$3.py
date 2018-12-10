@@ -1,4 +1,10 @@
-sword = ap_password	)
+---------------
+		
+		#-------------------------------------------------
+		self.wlan_sta.active(True)
+		self.wlan_ap.active(True)
+		
+		self.wlan_ap.config(essid = ap_name , password = ap_password	)
 
 		routeHandlers = [
 			("/", "GET", self._httpHandlerIndexGet),
@@ -8,13 +14,14 @@ sword = ap_password	)
 		]
 		
 		from Blocky.MicroWebSrv import MicroWebSrv
-		server = MicroWebSrv(routeHandlers = routeHandlers)
+		self.server = MicroWebSrv(routeHandlers = routeHandlers)
 		print('bootmode-> started')
 		#loop = asyncio.get_event_loop()
 		#loop.create_task(server.Start())
 		
-		await server.Start()
+		await self.server.Start()
 		print('bootmode-> completed')
+			
 		from machine import reset
 		reset()
 	

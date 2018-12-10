@@ -1,4 +1,8 @@
-end(self._format_msg(MSG_HW_SYNC, 'vr', pin))
+YNC))
+
+	def sync_virtual(self, pin):
+		if self.state == AUTHENTICATED:
+			self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
 	
 	def add_virtual_pin(self, pin, read=None, write=None):
 		if isinstance(pin, int) and pin in range(0, MAX_VIRTUAL_PINS):
@@ -64,5 +68,4 @@ end(self._format_msg(MSG_HW_SYNC, 'vr', pin))
 						if self._ssl:
 							import ssl
 							print('SSL: Connecting to %s:%d' % (self._server, self._port))
-							ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
-							self.conn = 
+							ss = socket.s

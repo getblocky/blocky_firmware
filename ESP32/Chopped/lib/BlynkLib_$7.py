@@ -1,4 +1,5 @@
-nfig" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
+ True
+					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					#self.virtual_write(128 ,  {"id":core.binascii.hexlify(core.machine.unique_id()) , "config" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" : core.wifi.wifi_list} , http = True)
 					core.wifi.wifi_list  = None
 				else:
@@ -53,8 +54,4 @@ nfig" : core.config , "ssid" : core.wifi.wlan_sta.config('essid') , "wifi_list" 
 				await core.asyncio.sleep_ms(1)
 				
 			if not self._do_connect or not core.flag.blynk:
-				self._close()
-				print('Blynk disconnection requested by the user')
-				break
-			
-		
+				self

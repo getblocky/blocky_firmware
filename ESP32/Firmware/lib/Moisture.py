@@ -1,10 +1,5 @@
-#version=1.0
-import sys
-core = sys.modules['Blocky.Core']
-# Note that there are two version of moisture sensor
-# V1 use a 10K PU-VCC
-# V2 use a 10K PU-PIN2
-#version=1.0
+#version=1.1
+
 import sys
 core = sys.modules['Blocky.Core']
 class WaterSensor :
@@ -16,7 +11,7 @@ class WaterSensor :
 		self.adc = core.machine.ADC(core.machine.Pin(self.pin[2],core.machine.Pin.IN))
 		core.machine.PWM(core.machine.Pin(self.pin[0],core.machine.Pin.IN)).deinit()
 		core.machine.Pin(self.pin[0] , core.machine.Pin.IN)
-		self.supply = core.machine.Pin(self.pin[1],Pin.OUT)
+		self.supply = core.machine.Pin(self.pin[1],core.machine.Pin.OUT)
 		
 		if (range == 1.1):		self.adc.atten(core.machine.ADC.ATTN_0DB)
 		elif (range == 1.5):	self.adc.atten(core.machine.ADC.ATTN_2_5DB)

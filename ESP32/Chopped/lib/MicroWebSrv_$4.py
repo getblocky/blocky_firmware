@@ -1,4 +1,9 @@
-
+f._headers.get("Content-Length", 0))
+					return True
+				else :
+					return False
+		
+		def _getConnUpgrade(self) :
 			if 'upgrade' in self._headers.get('Connection', '').lower() :
 				return self._headers.get('Upgrade', '').lower()
 			return None
@@ -17,7 +22,7 @@
 			return b if b else b''
 		
 		def ReadRequestPostedFormData(self) :
-			res  = { }
+			res	= { }
 			data = self.ReadRequestContent()
 			if len(data) > 0 :
 				elements = data.decode().split('&')
@@ -29,7 +34,7 @@
 			return res
 		
 	
-	# ===( Class Response  )======================================================
+	# ===( Class Response	)======================================================
 	
 	class _response :
 		
@@ -39,11 +44,13 @@
 		def _write(self, data) :
 			try :
 				
-				if isinstance(data , str):
+				if isinstance(data , str) or isinstance(data , bytes):
+					print('socket_write' , data , len(data))
 					return self._client._socket.write(data)
 				elif isinstance(data , list):
 					for x in data :
 						self._client._socket.write(x)
+					
 				
 			except Exception as err:
 				print('socket->_write->' , err)
@@ -59,16 +66,10 @@
 		def _writeContentTypeHeader(self, contentType, charset=None) :
 			if contentType :
 				ct = contentType \
-				   + (("; charset=%s" % charset) if charset else "")
+					 + (("; charset=%s" % charset) if charset else "")
 			else :
 				ct = "application/octet-stream"
 			self._writeHeader("Content-Type", ct)
 		
 		def _writeEndHeader(self) :
-			self._write("\r\n")
-		
-		#def _writeBeforeContent(self, code, headers, contentType, contentCharset, contentLength) :
-		#	pass		
-		
-		def WriteSwitchProto(self, upgrade, headers=None) :
-			self._writeFi
+			self._wri

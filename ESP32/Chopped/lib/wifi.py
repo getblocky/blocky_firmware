@@ -39,7 +39,15 @@ async def connect(ap=None):
 					break
 			if wlan_sta.isconnected():
 				core.flag.wifi = True
-				core.Timer.sync_ntp()
+				print('Syncing NTP Time -> ', end = '')
+				while True :
+					try :
+						core.Timer.sync_ntp()
+						print('OK')
+						break
+					except :
+						await core.asyncio.sleep_ms(500)
+						print('.',end = '')
 				break
 			await core.asyncio.sleep_ms(10000)
 			print('[WIFI] -> Reconneting')

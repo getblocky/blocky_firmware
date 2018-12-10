@@ -10,23 +10,23 @@ class MicroWebSrv :
 		"index.htm",
 	]
 	_mimeTypes = {
-		".txt"   : "text/plain",
-		".htm"   : "text/html",
-		".html"  : "text/html",
-		".css"   : "text/css",
-		".csv"   : "text/csv",
+		".txt"	 : "text/plain",
+		".htm"	 : "text/html",
+		".html"	: "text/html",
+		".css"	 : "text/css",
+		".csv"	 : "text/csv",
 		".js"	: "application/javascript",
-		".xml"   : "application/xml",
+		".xml"	 : "application/xml",
 		".xhtml" : "application/xhtml+xml",
-		".json"  : "application/json",
-		".zip"   : "application/zip",
-		".pdf"   : "application/pdf",
-		".jpg"   : "image/jpeg",
-		".jpeg"  : "image/jpeg",
-		".png"   : "image/png",
-		".gif"   : "image/gif",
-		".svg"   : "image/svg+xml",
-		".ico"   : "image/x-icon"
+		".json"	: "application/json",
+		".zip"	 : "application/zip",
+		".pdf"	 : "application/pdf",
+		".jpg"	 : "image/jpeg",
+		".jpeg"	: "image/jpeg",
+		".png"	 : "image/png",
+		".gif"	 : "image/gif",
+		".svg"	 : "image/svg+xml",
+		".ico"	 : "image/x-icon"
 	}
 	_html_escape_chars = {
 		"&" : "&amp;",
@@ -37,7 +37,7 @@ class MicroWebSrv :
 	}
 	_pyhtmlPagesExt = '.pyhtml'
 	
-	# ===( Utils  )===============================================================
+	# ===( Utils	)===============================================================
 	
 	def HTMLEscape(s) :
 		return ''.join(MicroWebSrv._html_escape_chars.get(c, c) for c in s)
@@ -87,7 +87,7 @@ class MicroWebSrv :
 	# ===( Constructor )==========================================================
 	
 	def __init__( self,
-				  routeHandlers = None,
-				  port		  = 80,
-				  bindIP		= '0.0.0.0',
-				  webPath	
+					routeHandlers = None,
+					port			= 80,
+					bindIP		= '0.0.0.0',
+					webPath		 = "/flash/www" ) :

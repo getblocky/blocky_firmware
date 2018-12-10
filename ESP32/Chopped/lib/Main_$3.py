@@ -1,5 +1,4 @@
-leep_ms(500)
-		if not core.wifi.wlan_sta.isconnected():
+	if not core.wifi.wlan_sta.isconnected():
 			print('[wifi] -> connecting back',end='')
 			await core.wifi.connect(core.config['known_networks'])
 			print('OK')

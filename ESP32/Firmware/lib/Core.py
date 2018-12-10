@@ -112,7 +112,7 @@ def download(filename , path):
 				response = None
 				gc.collect()
 				try :
-					response = urequests.get('https://raw.githubusercontent.com/getblocky/blocky_firmware/master/ESP32/Chopped/lib/{}_${}.{}'.format(filename.split('.')[0] , piece , filename.split('.')[1]))   
+					response = urequests.get('https://raw.githubusercontent.com/getblocky/dot_firmware/master/ota/{}_${}.{}'.format(filename.split('.')[0] , piece , filename.split('.')[1]))   
 					if response.status_code == 200 :
 						f.write(response.content)
 						print('#' , end = '')

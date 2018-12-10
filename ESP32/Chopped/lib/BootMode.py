@@ -6,8 +6,12 @@ class BootMode :
 	def __init__ (self):
 		self.wlan_ap =  core.network.WLAN(core.network.AP_IF)
 		self.wlan_sta =  core.network.WLAN(core.network.STA_IF)
+		self.wlan_sta.active(True)
+		self.wlan_ap.active(True)
 		self.status = 'start'
 		self.content = ''
+		self.success = False #dummy
+		self.server = None
 	async def connect(self, ssid, password):
 		self.wlan_sta.active(True)
 		self.wlan_sta.connect(ssid, password)
@@ -47,27 +51,15 @@ class BootMode :
 		
 		
 	def _httpHandlerCheckStatus(self, httpClient, httpResponse):
-		print('Get check status request')
-		if core.flag.wifi == True:
-			content = 'OK'
-		elif core.flag.wifi == False:
-			content = 'Failed'
-		else:	
-			content = ''
-		
-		httpResponse.WriteResponseOk(headers = None,
-			contentType	 = "text/html",
-			contentCharset = "UTF-8",
-			content = content)
-		
-		"""
-		if self.wifi_status == 1:
-			print('Wait for rebooting')
-			time.sleep(5)
-			print('Rebooting')
-			machine.reset()
-		"""
-
-	def _httpHandlerSaveConfig(self, httpClient, httpResponse):
-		request_json  = ''
-		r
+		httpResponse.WriteResponseOk(headers = None,contentType= "text/html",	contentCharset = "UTF-8",content = 'OK')
+		print('checking')
+		if self.wlan_sta.isconnected():
+			self.wifi_status = 1
+			print('Connected to ' , request_json['ssid'])
+			config = {}
+			try :
+				config = core.json.loads(open('config.json').read())
+			except :
+				pass
+			if not config.get('known_networks'):
+				config['known_netw

@@ -1,4 +1,5 @@
-ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
+ocket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
+							self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
 						else:
 							print('TCP: Connecting to %s:%d' % (self._server, self._port))
 							self.conn = socket.socket()
@@ -47,5 +48,4 @@ ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
 						core.indicator.rgb.fill((0,x*8,0))
 						core.indicator.rgb.write()
 						await core.asyncio.sleep_ms(10)
-					core.flag.blynk = True
-					#self.log( {"id":core.binascii.hexlify(core.machine.unique_id()) , "co
+					core.flag.blynk =

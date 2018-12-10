@@ -4,7 +4,8 @@
 								core.ota_file = None
 								core.os.rename('temp_code.py','user_code.py')
 								print('^^~')
-								self.virtual_write(127,'[OTA_DONE]',http = True)
+								#self.virtual_write(127,'[OTA_DONE]',http = True)
+								self.log('[OTA_DONE]')
 								print('User code saved')
 								for x in range(7):
 									core.indicator.rgb.fill((0,x*10,0))
@@ -22,7 +23,7 @@
 						
 					else :
 						print('Sorry , your code is lock , press config to unlock it')
-						core.blynk.log("[ERROR] You have locked your code , to upload new code , you need to press CONFIG button onboard")
+						self.log("[ERROR] You have locked your code , to upload new code , you need to press CONFIG button onboard")
 					# Run cleanup task here
 					
 				elif (pin in self._vr_pins_write or pin in self._vr_pins_read) :
@@ -50,5 +51,4 @@
 			else:
 				print('UNKNOWN' , params)
 				return 
-				#raise ValueError("Unknown message cmd: %s" % cmd)
-		except
+				#raise ValueError("Unknown messag
